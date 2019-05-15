@@ -13,14 +13,16 @@ class MyFormatter {
 
 subscribe to specRunner events:
 ```javascript
-  specRunner.on('fileStart' (absoluteFilename) => {});
-  specRunner.on('fileEnd' (absoluteFilename) => {});
-  specRunner.on('contextStart' (context) => {});
-  specRunner.on('contextEnd' (context) => {});
-  specRunner.on('exampleStart' (example) => {});
-  specRunner.on('exampleEnd' (example) => {});
-  specRunner.on('runEnd' () => {});
+  specRunner.on('fileStart' (specRunner, absoluteFilename) => {});
+  specRunner.on('fileEnd' (specRunner, absoluteFilename) => {});
+  specRunner.on('contextStart' (specRunner) => {});
+  specRunner.on('contextEnd' (specRunner) => {});
+  specRunner.on('exampleStart' (specRunner) => {});
+  specRunner.on('exampleEnd' (specRunner) => {});
+  specRunner.on('runEnd' (specRunner) => {});
 ```
+
+`specRunner` responds to `.context` and `.example`
 
 `context` is an instance of `Context`:
 ```javascript
@@ -29,7 +31,8 @@ context.children // [context/example] <- only those loaded so far
 context.description // the description supplied 
 context.initialisedBy // string: 'context' || 'describe'
 ```
-`exampleType` is one of:
+`example` is an instance of `Example` and responds to:
+`kind` with:
 ```javascript
 "it"
 "before"
@@ -38,10 +41,18 @@ context.initialisedBy // string: 'context' || 'describe'
 "after"
 ```
 
-`failure` is:
+and `failure`:
 An exception, which was either thrown by the system, or an `ExpectationFailure` which includes the following additional information:
 ```javascript
-description
 expected
 actual
 ```
+
+Default output formatters for jsspec
+
+Fomatters included:
+## `Null`
+Does nothing. Use with `--format null`. Can be used as a base class to create other formatters.
+
+## `Documentation`
+`-fd` or `--format documentation`. Currently does nothing. Pre-release creation.
