@@ -1,8 +1,8 @@
 # @jsspec/format
-[![Travis (.org) branch](https://img.shields.io/travis/jsspec/format/master.svg?logo=travis&style=for-the-badge)](https://travis-ci.org/jsspec/format)
+[![Travis](https://img.shields.io/travis/jsspec/format/master.svg?logo=travis&style=for-the-badge)](https://travis-ci.org/jsspec/format)
 [![AppVeyor](https://img.shields.io/appveyor/ci/HookyQR/format/master.svg?logo=appveyor&style=for-the-badge)](https://ci.appveyor.com/project/HookyQR/format)
 
-Default reporter formatters for jsspec
+Default reporter formatters for jsspec.
 
 ```javascript
 class MyFormatter {
@@ -47,8 +47,6 @@ An exception, which was either thrown by the system, or an `ExpectationFailure` 
 expected
 actual
 ```
-
-Default output formatters for jsspec
 
 Fomatters included:
 ## `Null`
