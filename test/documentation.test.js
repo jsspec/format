@@ -1,3 +1,5 @@
+'use strict';
+
 const Documentation = require('../documentation');
 const { EventEmitter } = require('events');
 const executor = new EventEmitter();

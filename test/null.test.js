@@ -1,3 +1,5 @@
+'use strict';
+
 const Null = require('../null');
 const { EventEmitter } = require('events');
 const executor = new EventEmitter();

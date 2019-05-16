@@ -1,3 +1,5 @@
+'use strict';
+
 const Null = require('./null');
 
 class Documentation extends Null {

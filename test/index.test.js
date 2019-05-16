@@ -1,3 +1,5 @@
+'use strict';
+
 const formatters = require('../index');
 
 describe('collection of default formatters', () => {

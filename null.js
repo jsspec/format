@@ -1,3 +1,5 @@
+'use strict';
+
 const eventWrap = (executor, event, self) => {
   function listener(...args) { self[event](this, ...args); }
   executor.on(event, listener);
