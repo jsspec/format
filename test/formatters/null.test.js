@@ -1,6 +1,6 @@
 'use strict';
 
-const Documentation = require('../documentation');
+const Null = require('../../formatters/null');
 const { EventEmitter } = require('events');
 const executor = new EventEmitter();
 
@@ -14,55 +14,61 @@ const events = [
   'runEnd',
 ];
 
-describe('Documentation', () => {
+describe('Null', () => {
   it('has a description',
-    () => expect(Documentation.description).to.be.a('string').and.include('Documentation'));
+    () => expect(Null.description).to.be.a('string').and.include('nothing'));
 
   afterEach(() => executor.removeAllListeners());
 
-  xdescribe('#constructor', () => {
+  describe('#constructor', () => {
+    it('subscribes to all events',
+      () => {
+        events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(0));
+        const doc = new Null(executor);
+        events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(1));
+      });
   });
 
   describe('instance', () => {
     let formatter;
     beforeEach(() => {
-      formatter = new Documentation(executor);
+      formatter = new Null(executor);
       events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(1));
     });
 
     describe('#fileStart', () => {
       it('is defined', () => {
-        expect(formatter.fileStart()).to.eql(undefined);
+        expect(() => formatter.fileStart()).not.to.throw();
       });
     });
 
     describe('#fileEnd', () => {
       it('is defined', () => {
-        expect(formatter.fileEnd()).to.eql(undefined);
+        expect(() => formatter.fileEnd()).not.to.throw();
       });
     });
 
     describe('#contextStart', () => {
       it('is defined', () => {
-        expect(formatter.contextStart()).to.eql(undefined);
+        expect(() => formatter.contextStart()).not.to.throw();
       });
     });
 
     describe('#contextEnd', () => {
       it('is defined', () => {
-        expect(formatter.contextEnd()).to.eql(undefined);
+        expect(() => formatter.contextEnd()).not.to.throw();
       });
     });
 
     describe('#exampleStart', () => {
       it('is defined', () => {
-        expect(formatter.exampleStart()).to.eql(undefined);
+        expect(() => formatter.exampleStart()).not.to.throw();
       });
     });
 
     describe('#exampleEnd', () => {
       it('is defined', () => {
-        expect(formatter.exampleEnd()).to.eql(undefined);
+        expect(() => formatter.exampleEnd()).not.to.throw();
       });
     });
 

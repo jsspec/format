@@ -4,15 +4,19 @@
     "node": true,
     "mocha": true
   },
+  "parserOptions": {
+    "ecmaVersion": 2018
+  },
   "extends": "eslint:recommended",
   "overrides": [{
     "files": ["*.test.js"],
     "globals": { "expect": false }
   }],
+  "globals": { "BigInt": false },
   "rules": {
     "indent": ["error", 2, { "SwitchCase": 1 }],
     "linebreak-style": ["error", "unix"],
-    "quotes": ["error", "single"],
+    "quotes": ["error", "single", "avoid-escape"],
     "semi": ["error", "always"],
     "no-console": "off"
   }

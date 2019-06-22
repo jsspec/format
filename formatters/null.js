@@ -21,8 +21,9 @@ class Null {
       eventWrap(executor, 'runEnd', this),
     ];
   }
-
-  fileStart(executor, absoluteFilename) {
+  
+  /* eslint-disable no-unused-vars */
+  fileStart(executor, absoluteFilename) {    
 
   }
 
@@ -38,14 +39,15 @@ class Null {
 
   }
 
-  exampleStart(executor, id, contextId, exampleType, description) {
+  exampleStart(executor, example) {
 
   }
 
-  exampleEnd(executor, id, failure = null) {
+  exampleEnd(executor, example) {
 
   }
 
+  /* eslint-enable no-unused-vars */
   runEnd(executor) {
     if (!executor) return;
     this.listeners.forEach(listener => executor.removeListener(listener[0], listener[1]));
