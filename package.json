@@ -1,6 +1,6 @@
 {
   "name": "@jsspec/format",
-  "version": "0.0.5",
+  "version": "0.0.8",
   "description": "Command line option parser",
   "main": "index.js",
   "scripts": {
@@ -30,7 +30,9 @@
     "sinon-chai": "3.3.0"
   },
   "files": [
-    "*.js"
+    "*.js",
+    "/formatters",
+    "/lib"
   ],
   "mocha": {
     "require": "test/test_helper"
