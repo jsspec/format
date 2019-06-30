@@ -60,7 +60,7 @@ class Documentation extends Null {
       line += ansi.tick;
     }
     line += ansi.light(example.description || '');
-    if (duration > 2000) line += ansi.light(ansi.red(' {' + duration + 'ms}'));
+    if (duration > 200) line += ansi.light(ansi.red(' {' + duration + 'ms}'));
 
     console.log(line);
   }
@@ -74,8 +74,13 @@ class Documentation extends Null {
     this.failures.map((example, index) => {
       console.log((index + 1).toString().padStart(3, ' ') + ')' + example.fullDescription);
 
-      if (example.failure.constructor.name === 'AssertionError')
+      if (example.failure.constructor.name === 'AssertionError'){
         console.log(ansi.red('     ' + example.failure.message) + '\n');
+        const stack = example.failure.stack.split('\n');
+        stack.shift();
+        
+        console.log(ansi.light(stack.join('\n')));
+      }
       else
         console.log(ansi.light(example.failure.stack));
       if (example.failure.expected && example.failure.actual) {
@@ -126,7 +131,7 @@ const prefix = (pfx, str) => {
 };
 
 function differ(expected, actual) {
-  let blocks = diff.diffJson(expected, actual);
+  let blocks = diff.diffJson(expected.toString(), actual.toString());
 
   return blocks.map(block => {
     if (block.added) {

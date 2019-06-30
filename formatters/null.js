@@ -23,7 +23,7 @@ class Null {
   }
   
   /* eslint-disable no-unused-vars */
-  fileStart(executor, absoluteFilename) {    
+  fileStart(executor, absoluteFilename) {
 
   }
 
