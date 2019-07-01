@@ -42,6 +42,14 @@ class Documentation extends Null {
   }
 
   exampleEnd(_, example = {}) {
+    let line = '  '.repeat(this.depth + 1);
+
+    if ( example.constructor.name.startsWith('X') ){
+      this.pendingTotal ++;
+      line += ansi.yellow('·· ') + ansi.light(example.description || '');
+      console.log(line);
+      return;
+    }
     const end = process.hrtime.bigint();
     const start = this.stack.pop() || end;
 
@@ -52,7 +60,6 @@ class Documentation extends Null {
     }
     this.total++;
 
-    let line = '  '.repeat(this.depth + 1);
 
     if (example.failure) {
       line += ansi.cross + this.failures.length + ') ';
@@ -99,7 +106,6 @@ class Documentation extends Null {
     if (this.pendingTotal) {
       col = 'yellow';
       summary += `, ${this.pendingTotal} pending`;
-      if (this.pendingTotal !== 1) { summary += 's'; }
     }
 
     if (this.failures.length) { col = 'red'; }
