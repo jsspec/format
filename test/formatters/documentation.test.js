@@ -10,6 +10,7 @@ const sinonChai = require('sinon-chai');
 
 chai.use(sinonChai);
 
+class XTest {}
 
 const ansi = require('../../lib/ansi');
 
@@ -141,7 +142,8 @@ describe('Documentation', () => {
                 constructor: { name: 'AssertionError' },
                 message: 'THE MESSAGE',
                 actual: 'wrong\nsame',
-                expected: 'right\nsame'
+                expected: 'right\nsame',
+                stack: ''
               }
             }, { failure: { stack: 'THE STACK' } }];
             formatter.exampleEnd(null, examples[0]);
@@ -162,6 +164,7 @@ describe('Documentation', () => {
           it('sets it to yellow', () => {
             const yellow = sinon.spy(ansi, 'yellow');
             withoutConsole(() => {
+              formatter.exampleEnd(null, new XTest());
               formatter.contextStart(null, 1, 'XContext', 'hello');
               formatter.contextEnd();
               formatter.contextStart(null, 1, 'XContext', 'hello yourself');
@@ -169,6 +172,7 @@ describe('Documentation', () => {
               formatter.runEnd();
             });
             yellow.restore();
+            expect(yellow).to.have.been.calledWith('·· ');
             expect(yellow).to.have.been.calledWith('hello');
             expect(yellow).to.have.been.calledWith('hello yourself');
           });
