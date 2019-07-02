@@ -15,10 +15,10 @@ subscribe to specRunner events:
 ```javascript
   specRunner.on('fileStart' (specRunner, absoluteFilename) => {});
   specRunner.on('fileEnd' (specRunner, absoluteFilename) => {});
-  specRunner.on('contextStart' (specRunner) => {});
-  specRunner.on('contextEnd' (specRunner) => {});
-  specRunner.on('exampleStart' (specRunner) => {});
-  specRunner.on('exampleEnd' (specRunner) => {});
+  specRunner.on('contextStart' (specRunner, id, contextType, description) => {});
+  specRunner.on('contextEnd' (specRunner, id) => {});
+  specRunner.on('exampleStart' (specRunner, example) => {});
+  specRunner.on('exampleEnd' (specRunner, example) => {});
   specRunner.on('runEnd' (specRunner) => {});
 ```
 
@@ -34,6 +34,7 @@ context.initialisedBy // string: 'context' || 'describe'
 `example` is an instance of `Example` and responds to:
 `kind` with:
 ```javascript
+"pending" // the block won't be run in this case
 "it"
 "before"
 "beforeEach"

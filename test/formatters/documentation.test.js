@@ -10,8 +10,6 @@ const sinonChai = require('sinon-chai');
 
 chai.use(sinonChai);
 
-class XTest {}
-
 const ansi = require('../../lib/ansi');
 
 const withoutConsole = block => {
@@ -164,7 +162,7 @@ describe('Documentation', () => {
           it('sets it to yellow', () => {
             const yellow = sinon.spy(ansi, 'yellow');
             withoutConsole(() => {
-              formatter.exampleEnd(null, new XTest());
+              formatter.exampleEnd(null, {kind: 'pending'});
               formatter.contextStart(null, 1, 'XContext', 'hello');
               formatter.contextEnd();
               formatter.contextStart(null, 1, 'XContext', 'hello yourself');

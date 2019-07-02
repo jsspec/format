@@ -27,7 +27,7 @@ class Documentation extends Null {
   contextStart(_, id, contextType = '', description) {
     this.pendingContexts[id] = { contextType, description, kind: 'context' };
     if (contextType[0] === 'X') {
-      this.pendingTotal ++;
+      this.pendingTotal++;
       description = ansi.light(ansi.yellow(description));
     }
     this.depth++;
@@ -37,6 +37,7 @@ class Documentation extends Null {
   contextEnd() {
     this.depth--;
   }
+
   exampleStart() {
     this.stack.push(process.hrtime.bigint());
   }
@@ -44,8 +45,8 @@ class Documentation extends Null {
   exampleEnd(_, example = {}) {
     let line = '  '.repeat(this.depth + 1);
 
-    if ( example.constructor.name.startsWith('X') ){
-      this.pendingTotal ++;
+    if (example.kind === 'pending') {
+      this.pendingTotal++;
       line += ansi.yellow('·· ') + ansi.light(example.description || '');
       console.log(line);
       return;
@@ -81,14 +82,13 @@ class Documentation extends Null {
     this.failures.map((example, index) => {
       console.log((index + 1).toString().padStart(3, ' ') + ')' + example.fullDescription);
 
-      if (example.failure.constructor.name === 'AssertionError'){
+      if (example.failure.constructor.name === 'AssertionError') {
         console.log(ansi.red('     ' + example.failure.message) + '\n');
         const stack = example.failure.stack.split('\n');
         stack.shift();
-        
+
         console.log(ansi.light(stack.join('\n')));
-      }
-      else
+      } else
         console.log(ansi.light(example.failure.stack));
       if (example.failure.expected && example.failure.actual) {
         console.log('    ' + ansi.red(' - Actual ') + ansi.green(' + Expected') + '\n');

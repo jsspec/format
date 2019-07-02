@@ -1,7 +1,7 @@
 {
   "name": "@jsspec/format",
-  "version": "0.0.9",
-  "description": "Command line option parser",
+  "version": "0.0.10",
+  "description": "Output formatter for jsspec",
   "main": "index.js",
   "scripts": {
     "test": "c8 mocha --recursive"
@@ -11,7 +11,8 @@
     "url": "git+https://github.com/JSSpec/format.git"
   },
   "keywords": [
-    "jsspec"
+    "jsspec",
+    "test output"
   ],
   "author": "HookyQR",
   "license": "MIT",
