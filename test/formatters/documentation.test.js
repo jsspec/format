@@ -16,7 +16,7 @@ const withoutConsole = block => {
   const stolenConsole = sinon.stub(console, 'log');
   block();
   stolenConsole.restore();
-}
+};
 
 const events = [
   'fileStart',
@@ -25,6 +25,7 @@ const events = [
   'contextEnd',
   'exampleStart',
   'exampleEnd',
+  'afterHookFailure',
   'runEnd',
 ];
 
@@ -59,6 +60,7 @@ describe('Documentation', () => {
       it('is defined', () => {
         expect(() => withoutConsole(() => formatter.contextStart())).not.to.throw();
       });
+
       context('when the context is an "ignore" (X) type', () => {
         it('colors yellow', () => {
           let yellow;
@@ -81,6 +83,20 @@ describe('Documentation', () => {
     describe('#exampleStart', () => {
       it('is defined', () => {
         expect(() => formatter.exampleStart()).not.to.throw();
+      });
+    });
+
+    describe('#afterHookFailure', () => {
+      it('is defined', () => {
+        expect(() => withoutConsole(() => formatter.afterHookFailure(null, {description: ''}))).not.to.throw();
+      });
+
+      it('stores the failure', () => {
+        const failed = { failure: true, description: '' };
+        withoutConsole(() => {
+          formatter.afterHookFailure(null, failed);
+        });
+        expect(formatter.failures).to.include(failed);
       });
     });
 

@@ -19,6 +19,7 @@ subscribe to specRunner events:
   specRunner.on('contextEnd' (specRunner, id) => {});
   specRunner.on('exampleStart' (specRunner, example) => {});
   specRunner.on('exampleEnd' (specRunner, example) => {});
+  specRunner.on('afterHookFailure' (specRunner, example) => {}); // the example in this case is the hook
   specRunner.on('runEnd' (specRunner) => {});
 ```
 
@@ -36,10 +37,7 @@ context.initialisedBy // string: 'context' || 'describe'
 ```javascript
 "pending" // the block won't be run in this case
 "it"
-"before"
-"beforeEach"
-"afterEach"
-"after"
+"after" // after hooks fall outside of the `it` block execution
 ```
 
 and `failure`:
@@ -49,9 +47,12 @@ expected
 actual
 ```
 
-Fomatters included:
+Formatters included:
 ## `Null`
 Does nothing. Use with `--format null`. Can be used as a base class to create other formatters.
 
 ## `Documentation`
-`-fd` or `--format documentation`. Currently does nothing. Pre-release creation.
+`-fd` or `--format documentation`. Presents a tree of execution results with checks and crosses for example results. A summary of failures are provided at the end.
+
+## `Dot`
+`-fo` or `--format dot`. Single character output per test. With summary at the end.

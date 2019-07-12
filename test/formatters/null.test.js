@@ -11,6 +11,7 @@ const events = [
   'contextEnd',
   'exampleStart',
   'exampleEnd',
+  'afterHookFailure',
   'runEnd',
 ];
 
@@ -24,7 +25,7 @@ describe('Null', () => {
     it('subscribes to all events',
       () => {
         events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(0));
-        const doc = new Null(executor);
+        new Null(executor);
         events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(1));
       });
   });
@@ -69,6 +70,12 @@ describe('Null', () => {
     describe('#exampleEnd', () => {
       it('is defined', () => {
         expect(() => formatter.exampleEnd()).not.to.throw();
+      });
+    });
+
+    describe('#afterHookFailure', () => {
+      it('is defined', () => {
+        expect(() => formatter.afterHookFailure()).not.to.throw();
       });
     });
 

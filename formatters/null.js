@@ -18,6 +18,7 @@ class Null {
       eventWrap(executor, 'contextEnd', this),
       eventWrap(executor, 'exampleStart', this),
       eventWrap(executor, 'exampleEnd', this),
+      eventWrap(executor, 'afterHookFailure', this),
       eventWrap(executor, 'runEnd', this),
     ];
   }
@@ -44,6 +45,10 @@ class Null {
   }
 
   exampleEnd(executor, example) {
+
+  }
+
+  afterHookFailure(executor, example) {
 
   }
 

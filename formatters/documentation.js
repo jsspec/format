@@ -73,6 +73,16 @@ class Documentation extends Null {
     console.log(line);
   }
 
+  afterHookFailure(_, example = {}) {
+    let line = '  '.repeat(this.depth + 1) + 
+      ansi.cross + this.failures.length + ') ' +
+      ansi.light(example.description);
+
+    this.failures.push(example);
+
+    console.log(line);
+  }
+
   runEnd(executor) {
     super.runEnd(executor);
     this.timing.end = process.hrtime.bigint();
@@ -129,11 +139,11 @@ class Documentation extends Null {
   }
 }
 
-const prefix = (pfx, str) => {
-  let lines = str.split('\n').join('\n' + pfx);
-  if (lines.endsWith('\n' + pfx)) lines = lines.slice(0, -pfx.length);
+const prefix = (prefix, str) => {
+  let lines = str.split('\n').join('\n' + prefix);
+  if (lines.endsWith('\n' + prefix)) lines = lines.slice(0, -prefix.length);
   else(lines += '\n');
-  return pfx + lines;
+  return prefix + lines;
 };
 
 function differ(expected, actual) {
