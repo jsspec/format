@@ -19,7 +19,7 @@ subscribe to specRunner events:
   specRunner.on('contextEnd' (specRunner, id) => {});
   specRunner.on('exampleStart' (specRunner, example) => {});
   specRunner.on('exampleEnd' (specRunner, example) => {});
-  specRunner.on('afterHookFailure' (specRunner, example) => {}); // the example in this case is the hook
+  specRunner.on('contextLevelFailure' (specRunner, exampleOrContext) => {});
   specRunner.on('runEnd' (specRunner) => {});
 ```
 

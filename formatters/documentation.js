@@ -73,12 +73,12 @@ class Documentation extends Null {
     console.log(line);
   }
 
-  afterHookFailure(_, example = {}) {
-    let line = '  '.repeat(this.depth + 1) + 
-      ansi.cross + this.failures.length + ') ' +
-      ansi.light(example.description);
+  contextLevelFailure(_, exampleOrContext = {}) {
+    this.failures.push(exampleOrContext);
 
-    this.failures.push(example);
+    let line = '  '.repeat(this.depth + 1) +
+      ansi.cross + this.failures.length + ') ' +
+      ansi.light(exampleOrContext.description);
 
     console.log(line);
   }
@@ -89,7 +89,7 @@ class Documentation extends Null {
     console.log('');
     console.log('');
 
-    this.failures.map((example, index) => {
+    this.failures.forEach((example, index) => {
       console.log((index + 1).toString().padStart(3, ' ') + ')' + example.fullDescription);
 
       if (example.failure.constructor.name === 'AssertionError') {
@@ -98,8 +98,12 @@ class Documentation extends Null {
         stack.shift();
 
         console.log(ansi.light(stack.join('\n')));
-      } else
-        console.log(ansi.light(example.failure.stack));
+      } else {
+        const stack = example.failure.stack.split('\n');
+        console.log(ansi.red('     ' + stack.shift()) + '\n');
+
+        console.log(ansi.light(stack.join('\n')));
+      }
       if (example.failure.expected && example.failure.actual) {
         console.log('    ' + ansi.red(' - Actual ') + ansi.green(' + Expected') + '\n');
         console.log(differ(example.failure.expected, example.failure.actual).join(''));
@@ -125,9 +129,15 @@ class Documentation extends Null {
     console.log(ansi[col](summary) + ansi.light(` (in ${this.time})`));
     console.log('');
     if (this.failures.length) {
-      console.log('Failed examples:');
-      this.failures.forEach(failure => {
-        console.log(ansi.red(`  jsspec ${failure.location}`) + ansi.blue(` #${failure.fullDescription}`));
+      let headerDone;
+      this.failures.forEach(({ location = null, fullDescription = '' }) => {
+        if (location) {
+          if (!headerDone) {
+            headerDone = true;
+            console.log('Failed examples:');
+          }
+          console.log(ansi.red(`  jsspec ${location}`) + ansi.blue(` #${fullDescription}`));
+        }
       });
     }
   }

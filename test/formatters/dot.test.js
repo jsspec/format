@@ -1,6 +1,6 @@
 'use strict';
 
-const Documentation = require('../../formatters/documentation');
+const Dot = require('../../formatters/dot');
 const { EventEmitter } = require('events');
 const executor = new EventEmitter();
 
@@ -14,8 +14,10 @@ const ansi = require('../../lib/ansi');
 
 const withoutConsole = block => {
   const stolenConsole = sinon.stub(console, 'log');
+  const stolenStdOut = sinon.stub(process.stdout, 'write');
   block();
   stolenConsole.restore();
+  stolenStdOut.restore();
 };
 
 const events = [
@@ -29,9 +31,9 @@ const events = [
   'runEnd',
 ];
 
-describe('Documentation', () => {
+describe('Dot', () => {
   it('has a description',
-    () => expect(Documentation.description).to.be.a('string').and.include('Documentation'));
+    () => expect(Dot.description).to.be.a('string').and.include('Dot'));
 
   afterEach(() => executor.removeAllListeners());
 
@@ -40,7 +42,7 @@ describe('Documentation', () => {
   describe('instance', () => {
     let formatter;
     beforeEach(() => {
-      formatter = new Documentation(executor);
+      formatter = new Dot(executor);
       events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(1));
     });
 
@@ -59,18 +61,6 @@ describe('Documentation', () => {
     describe('#contextStart', () => {
       it('is defined', () => {
         expect(() => withoutConsole(() => formatter.contextStart())).not.to.throw();
-      });
-
-      context('when the context is an "ignore" (X) type', () => {
-        it('colors yellow', () => {
-          let yellow;
-          withoutConsole(() => {
-            yellow = sinon.spy(ansi, 'yellow');
-            formatter.contextStart(null, 0, 'XContext', 'test');
-            yellow.restore();
-          });
-          expect(yellow).to.have.been.calledWith('test');
-        });
       });
     });
 
@@ -113,7 +103,16 @@ describe('Documentation', () => {
         expect(() => withoutConsole(() => formatter.exampleEnd())).not.to.throw();
       });
 
-      context('when time expires', () => {
+      context('with a failed context', () => {
+        it('stores the failure', () => {
+          const failed = { failure: true };
+          withoutConsole(() => {
+            formatter.exampleEnd(null, failed);
+          });
+        });
+      });
+
+      context('when time exceeds 200ms', () => {
         it('adds a time in red', function(done) {
           this.timeout(3000);
           formatter.exampleStart();
@@ -121,23 +120,13 @@ describe('Documentation', () => {
             () => {
               let spy;
               withoutConsole(() => {
-                spy = sinon.spy(ansi, 'red');
+                spy = sinon.spy(ansi, 'yellow');
                 formatter.exampleEnd();
                 spy.restore();
               });
-              expect(spy).to.have.been.calledWith(sinon.match(/\{\d*\s*ms}/));
+              expect(spy).to.have.been.calledWith('.');
               done();
-            }, 2001);
-        });
-      });
-
-      context('with a failed context', () => {
-        it('stores the failure', () => {
-          const failed = { failure: true };
-          withoutConsole(() => {
-            formatter.exampleEnd(null, failed);
-          });
-          expect(formatter.failures).to.include(failed);
+            }, 201);
         });
       });
     });
@@ -194,12 +183,11 @@ describe('Documentation', () => {
               formatter.runEnd();
             });
             yellow.restore();
-            expect(yellow).to.have.been.calledWith('·· ');
-            expect(yellow).to.have.been.calledWith('hello');
-            expect(yellow).to.have.been.calledWith('hello yourself');
+            expect(yellow).to.have.been.calledWith('?');
           });
         });
       });
+
       describe('#time', () => {
         it("reports seconds when it's more than 1 sec", () => {
           formatter.timing.start = BigInt(1000000000);

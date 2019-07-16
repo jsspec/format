@@ -11,7 +11,7 @@ const events = [
   'contextEnd',
   'exampleStart',
   'exampleEnd',
-  'afterHookFailure',
+  'contextLevelFailure',
   'runEnd',
 ];
 

@@ -18,7 +18,7 @@ class Null {
       eventWrap(executor, 'contextEnd', this),
       eventWrap(executor, 'exampleStart', this),
       eventWrap(executor, 'exampleEnd', this),
-      eventWrap(executor, 'afterHookFailure', this),
+      eventWrap(executor, 'contextLevelFailure', this),
       eventWrap(executor, 'runEnd', this),
     ];
   }

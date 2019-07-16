@@ -16,6 +16,10 @@ class Dot extends Documentation {
 
   contextStart() {}
   contextEnd() {}
+  contextLevelFailure(_, exampleOrContext = {}) {
+    process.stdout.write(ansi.red('X'));
+    this.failures.push(exampleOrContext);
+  }
 
   exampleEnd(_, example = {}) {
     if (example.kind === 'pending') {
@@ -42,12 +46,6 @@ class Dot extends Documentation {
       else
         process.stdout.write(ansi.green('.'));
     }
-  }
-
-  afterHookFailure(_, example = {}) {
-    process.stdout.write(ansi.red('X'));
-
-    this.failures.push(example);
   }
 
   runEnd(executor) {
