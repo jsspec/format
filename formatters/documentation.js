@@ -107,8 +107,8 @@ class Documentation extends Null {
       if (example.failure.expected && example.failure.actual) {
         console.log('    ' + ansi.red(' - Actual ') + ansi.green(' + Expected') + '\n');
         console.log(differ(example.failure.expected, example.failure.actual).join(''));
-        console.log('');
       }
+      console.log('');
     });
     console.log('');
 
