@@ -93,11 +93,14 @@ class Documentation extends Null {
       console.log((index + 1).toString().padStart(3, ' ') + ')' + example.fullDescription);
 
       if (example.failure.constructor.name === 'AssertionError') {
-        console.log(ansi.red('     ' + example.failure.message) + '\n');
-        const stack = example.failure.stack.split('\n');
-        stack.shift();
+        console.log(ansi.red('     ' + example.failure.message.trimRight()) + '\n');
+        let stack = example.failure.stack;
+        if (stack.includes(example.failure.message)) {
+          stack = stack.slice(stack.indexOf(example.failure.message) + example.failure.message.length);
+        }
+        stack = stack.replace(/^.*\n/, '');
 
-        console.log(ansi.light(stack.join('\n')));
+        console.log(ansi.light(stack));
       } else {
         const stack = example.failure.stack.split('\n');
         console.log(ansi.red('     ' + stack.shift()) + '\n');
