@@ -155,12 +155,12 @@ class Documentation extends Null {
 const prefix = (prefix, str) => {
   let lines = str.split('\n').join('\n' + prefix);
   if (lines.endsWith('\n' + prefix)) lines = lines.slice(0, -prefix.length);
-  else(lines += '\n');
+  else lines += '\n';
   return prefix + lines;
 };
 
 function differ(expected, actual) {
-  let blocks = diff.diffJson(expected.toString(), actual.toString());
+  let blocks = diff.diffJson(expected, actual);
 
   return blocks.map(block => {
     if (block.added) {
