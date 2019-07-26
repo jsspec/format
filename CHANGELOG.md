@@ -1,3 +1,7 @@
+*** 0.0.14
+* Allow multiline error message
+* Don't stringify input to diff
+
 *** 0.0.13
 * Move blank line to separate summaries better
 
