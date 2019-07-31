@@ -13,38 +13,33 @@ class MyFormatter {
 
 subscribe to specRunner events:
 ```javascript
-  specRunner.on('fileStart' (specRunner, absoluteFilename) => {});
-  specRunner.on('fileEnd' (specRunner, absoluteFilename) => {});
-  specRunner.on('contextStart' (specRunner, id, contextType, description) => {});
-  specRunner.on('contextEnd' (specRunner, id) => {});
+  specRunner.on('fileStart' (specRunner, uniqueFileRunReference) => {});
+  specRunner.on('fileEnd' (specRunner, uniqueFileRunReference) => {});
+  specRunner.on('contextStart' (specRunner, context) => {});
+  specRunner.on('contextEnd' (specRunner, context) => {});
   specRunner.on('exampleStart' (specRunner, example) => {});
   specRunner.on('exampleEnd' (specRunner, example) => {});
   specRunner.on('contextLevelFailure' (specRunner, exampleOrContext) => {});
   specRunner.on('runEnd' (specRunner) => {});
 ```
 
-`specRunner` responds to `.context` and `.example`
-
-`context` is an instance of `Context`:
+`context`, `example` and `exampleOrContext` each respond to the following:
 ```javascript
-context.parent // a context
-context.children // [context/example] <- only those loaded so far
-context.description // the description supplied 
-context.initialisedBy // string: 'context' || 'describe'
-```
-`example` is an instance of `Example` and responds to:
-`kind` with:
-```javascript
-"pending" // the block won't be run in this case
-"it"
-"after" // after hooks fall outside of the `it` block execution
+id // [For a conetxt only] a unique name for this context
+description // the description supplied 
+fullDescription // the description, with all context descriptions pre-pended
+kind // the class name of the object
+base // a uniq name relating to this spec file run
+failure // which may be (hopefully) undefined
 ```
 
-and `failure`:
-An exception, which was either thrown by the system, or an `ExpectationFailure` which includes the following additional information:
+`failure` is either an exception, or an exception converted to an object, depending on how `JSSpec` was run. It will have the following attributes:
 ```javascript
-expected
-actual
+constructor.name
+stack
+message
+expected // may be empty
+actual // may be empty
 ```
 
 Formatters included:

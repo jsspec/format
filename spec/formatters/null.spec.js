@@ -73,9 +73,9 @@ describe('Null', () => {
       });
     });
 
-    describe('#afterHookFailure', () => {
+    describe('#contextLevelFailure', () => {
       it('is defined', () => {
-        expect(() => formatter.afterHookFailure()).not.to.throw();
+        expect(() => formatter.contextLevelFailure()).not.to.throw();
       });
     });
 

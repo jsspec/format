@@ -24,19 +24,19 @@ class Null {
   }
   
   /* eslint-disable no-unused-vars */
-  fileStart(executor, absoluteFilename) {
+  fileStart(executor, uniqueName) {
 
   }
 
-  fileEnd(executor, absoluteFilename) {
+  fileEnd(executor, uniqueName) {
 
   }
 
-  contextStart(executor, id, contextType, description) {
+  contextStart(executor, context) {
 
   }
 
-  contextEnd(executor, id) {
+  contextEnd(executor, context) {
 
   }
 
@@ -48,7 +48,7 @@ class Null {
 
   }
 
-  afterHookFailure(executor, example) {
+  contextLevelFailure(executor, example) {
 
   }
 

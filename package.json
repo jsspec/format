@@ -1,10 +1,10 @@
 {
   "name": "@jsspec/format",
-  "version": "0.0.14",
+  "version": "0.1.0",
   "description": "Output formatter for jsspec",
   "main": "index.js",
   "scripts": {
-    "test": "c8 mocha --recursive"
+    "test": "c8 jsspec -r chai/register-expect"
   },
   "repository": {
     "type": "git",
@@ -24,7 +24,7 @@
     "diff": "^4.0.1"
   },
   "devDependencies": {
-    "mocha": "~5.2.0",
+    "@jsspec/jsspec": "*",
     "chai": "4.2.0",
     "c8": "^4.1.5",
     "sinon": "^7.3.2",
@@ -34,8 +34,5 @@
     "*.js",
     "/formatters",
     "/lib"
-  ],
-  "mocha": {
-    "require": "test/test_helper"
-  }
+  ]
 }

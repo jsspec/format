@@ -14,8 +14,8 @@ class Dot extends Documentation {
     super(emitter);
   }
 
-  contextStart() {}
-  contextEnd() {}
+  contextStart(_, context) { this.stream(context).depth++; }
+
   contextLevelFailure(_, exampleOrContext = {}) {
     process.stdout.write(ansi.red('X'));
     this.failures.push(exampleOrContext);
@@ -28,9 +28,10 @@ class Dot extends Documentation {
       return;
     }
 
+    const stream = this.stream(example);
     const end = process.hrtime.bigint();
-    const start = this.stack.pop() || end;
-
+    const start = stream.exampleStart || end;
+    
     let duration = Number((end - start) / MILLION);
 
     if (example.failure) {
@@ -41,15 +42,14 @@ class Dot extends Documentation {
     if (example.failure) {
       process.stdout.write(ansi.red('X'));
     } else {
-      if ( duration > 200 )
-        process.stdout.write(ansi.light(ansi.yellow('.')));
-      else
-        process.stdout.write(ansi.green('.'));
+      if (duration > 2 * example.timeout / 3) process.stdout.write(ansi.light(ansi.red('.')));
+      else if (duration > example.timeout / 3) process.stdout.write(ansi.light(ansi.yellow('.')));
+      else process.stdout.write(ansi.green('.'));
     }
   }
 
   runEnd(executor) {
-    // process.stdout.write('\n');
+    process.stdout.write('\n');
     super.runEnd(executor);
   }
 }

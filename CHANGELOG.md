@@ -1,16 +1,9 @@
-*** 0.0.14
-* Allow multiline error message
-* Don't stringify input to diff
-
-*** 0.0.13
-* Move blank line to separate summaries better
-
-*** 0.0.12
-* Change `AfterHookFailure` to `ContextLevelFailure`
-
-*** 0.0.11
-* Add after hook failure reporting
-* Add `dot` formatter
+*** 0.1.0
+* Overhaul and enable async (overlapping) messages in prep for running `jsspec` with `--watch`
 
 *** 0.0.x
-* Pre-release changes - organising supporting files
+* Allow multiline error message
+* Don't stringify input to diff
+* Move blank line to separate summaries better
+* Add `ContextLevelFailure`
+* Add `dot` formatter

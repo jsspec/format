@@ -12,12 +12,13 @@ chai.use(sinonChai);
 
 const ansi = require('../../lib/ansi');
 
-const withoutConsole = block => {
-  const stolenConsole = sinon.stub(console, 'log');
+const withoutStdOut = block => {
   const stolenStdOut = sinon.stub(process.stdout, 'write');
-  block();
-  stolenConsole.restore();
-  stolenStdOut.restore();
+  try {
+    block();
+  } finally {
+    stolenStdOut.restore();
+  }
 };
 
 const events = [
@@ -36,8 +37,6 @@ describe('Dot', () => {
     () => expect(Dot.description).to.be.a('string').and.include('Dot'));
 
   afterEach(() => executor.removeAllListeners());
-
-  xdescribe('#constructor', () => {});
 
   describe('instance', () => {
     let formatter;
@@ -60,7 +59,11 @@ describe('Dot', () => {
 
     describe('#contextStart', () => {
       it('is defined', () => {
-        expect(() => withoutConsole(() => formatter.contextStart())).not.to.throw();
+        expect(() =>
+          // withoutStdOut(
+          () => formatter.contextStart()
+          // )
+        ).not.to.throw();
       });
     });
 
@@ -78,20 +81,20 @@ describe('Dot', () => {
 
     describe('#runEnd', () => {
       it('triggers the header on summary', () => {
-        formatter.failures.push({failure: {stack:''}});
-        formatter.failures.push({failure: {stack:''}, location: 'here'});
-        expect(() => withoutConsole(() => formatter.runEnd())).not.to.throw();
+        formatter.failures.push({ failure: { stack: '' } });
+        formatter.failures.push({ failure: { stack: '' }, location: 'here' });
+        expect(() => withoutStdOut(() => formatter.runEnd())).not.to.throw();
       });
     });
 
     describe('#contextLevelFailure', () => {
       it('is defined', () => {
-        expect(() => withoutConsole(() => formatter.contextLevelFailure(null, {description: ''}))).not.to.throw();
+        expect(() => withoutStdOut(() => formatter.contextLevelFailure(null, { description: '' }))).not.to.throw();
       });
 
       it('stores the failure', () => {
         const failed = { failure: true, description: '' };
-        withoutConsole(() => {
+        withoutStdOut(() => {
           formatter.contextLevelFailure(null, failed);
         });
         expect(formatter.failures).to.include(failed);
@@ -100,45 +103,60 @@ describe('Dot', () => {
 
     describe('#exampleEnd', () => {
       it('is defined', () => {
-        expect(() => withoutConsole(() => formatter.exampleEnd())).not.to.throw();
+        expect(() => withoutStdOut(() => formatter.exampleEnd())).not.to.throw();
       });
 
       context('with a failed context', () => {
         it('stores the failure', () => {
           const failed = { failure: true };
-          withoutConsole(() => {
+          withoutStdOut(() => {
             formatter.exampleEnd(null, failed);
           });
         });
       });
 
-      context('when time exceeds 200ms', () => {
-        it('adds a time in red', function(done) {
-          this.timeout(3000);
+      context('when a little slow', () => {
+        it('dots yellow', { timeout: 0 }, () => {
           formatter.exampleStart();
-          setTimeout(
-            () => {
-              let spy;
-              withoutConsole(() => {
-                spy = sinon.spy(ansi, 'yellow');
-                formatter.exampleEnd();
-                spy.restore();
+          return new Promise(resolve => setTimeout(resolve, 11))
+            .then(
+              () => {
+                let spy;
+                withoutStdOut(() => {
+                  spy = sinon.spy(ansi, 'yellow');
+                  formatter.exampleEnd(null, { timeout: 30 });
+                  spy.restore();
+                });
+                expect(spy).to.have.been.calledWith('.');
               });
-              expect(spy).to.have.been.calledWith('.');
-              done();
-            }, 201);
+        });
+      });
+      context('when real slow', () => {
+        it('dots red', { timeout: 400 }, () => {
+          formatter.exampleStart();
+          return new Promise(resolve => setTimeout(resolve, 20))
+            .then(
+              () => {
+                let spy;
+                withoutStdOut(() => {
+                  spy = sinon.spy(ansi, 'red');
+                  formatter.exampleEnd(null, { timeout: 21 });
+                  spy.restore();
+                });
+                expect(spy).to.have.been.calledWith('.');
+              });
         });
       });
     });
 
     describe('#runEnd', () => {
       it('removes listeners', () => {
-        withoutConsole(() => executor.emit('runEnd'));
+        withoutStdOut(() => executor.emit('runEnd'));
         events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(0));
       });
 
       it("doesn't explode if the executor doesn't get passed", () => {
-        withoutConsole(() => formatter.runEnd());
+        withoutStdOut(() => formatter.runEnd());
         events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(1));
       });
 
@@ -147,7 +165,7 @@ describe('Dot', () => {
           const red = sinon.spy(ansi, 'red');
           const green = sinon.spy(ansi, 'green');
           const light = sinon.spy(ansi, 'light');
-          withoutConsole(() => {
+          withoutStdOut(() => {
             const examples = [{
               failure: {
                 constructor: { name: 'AssertionError' },
@@ -174,8 +192,8 @@ describe('Dot', () => {
         context('With pending tests', () => {
           it('sets it to yellow', () => {
             const yellow = sinon.spy(ansi, 'yellow');
-            withoutConsole(() => {
-              formatter.exampleEnd(null, {kind: 'pending'});
+            withoutStdOut(() => {
+              formatter.exampleEnd(null, { kind: 'pending' });
               formatter.contextStart(null, 1, 'XContext', 'hello');
               formatter.contextEnd();
               formatter.contextStart(null, 1, 'XContext', 'hello yourself');

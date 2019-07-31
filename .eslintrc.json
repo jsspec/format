@@ -1,9 +1,11 @@
 {
   "env": {
+    "jsspec/jsspec": true,
     "es6": true,
     "node": true,
     "mocha": true
   },
+  "plugins": ["jsspec"],
   "parserOptions": {
     "ecmaVersion": 2018
   },

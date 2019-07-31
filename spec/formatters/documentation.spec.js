@@ -12,10 +12,13 @@ chai.use(sinonChai);
 
 const ansi = require('../../lib/ansi');
 
-const withoutConsole = block => {
-  const stolenConsole = sinon.stub(console, 'log');
-  block();
-  stolenConsole.restore();
+const withoutStdOut = block => {
+  const stolenStdOut = sinon.stub(process.stdout, 'write');
+  try {
+    block();
+  } finally {
+    stolenStdOut.restore();
+  }
 };
 
 const events = [
@@ -35,8 +38,6 @@ describe('Documentation', () => {
 
   afterEach(() => executor.removeAllListeners());
 
-  xdescribe('#constructor', () => {});
-
   describe('instance', () => {
     let formatter;
     beforeEach(() => {
@@ -46,27 +47,27 @@ describe('Documentation', () => {
 
     describe('#fileStart', () => {
       it('is defined', () => {
-        expect(() => formatter.fileStart()).not.to.throw();
+        expect(() => formatter.fileStart('')).not.to.throw();
       });
     });
 
     describe('#fileEnd', () => {
       it('is defined', () => {
-        expect(() => formatter.fileEnd()).not.to.throw();
+        expect(() => formatter.fileEnd('')).not.to.throw();
       });
     });
 
     describe('#contextStart', () => {
       it('is defined', () => {
-        expect(() => withoutConsole(() => formatter.contextStart())).not.to.throw();
+        expect(() => withoutStdOut(() => formatter.contextStart())).not.to.throw();
       });
 
       context('when the context is an "ignore" (X) type', () => {
         it('colors yellow', () => {
           let yellow;
-          withoutConsole(() => {
+          withoutStdOut(() => {
             yellow = sinon.spy(ansi, 'yellow');
-            formatter.contextStart(null, 0, 'XContext', 'test');
+            formatter.contextStart(null, { kind: 'X', description: 'test' });
             yellow.restore();
           });
           expect(yellow).to.have.been.calledWith('test');
@@ -88,20 +89,20 @@ describe('Documentation', () => {
 
     describe('#runEnd', () => {
       it('triggers the header on summary', () => {
-        formatter.failures.push({failure: {stack:''}});
-        formatter.failures.push({failure: {stack:''}, location: 'here'});
-        expect(() => withoutConsole(() => formatter.runEnd())).not.to.throw();
+        formatter.failures.push({ failure: { stack: '' } });
+        formatter.failures.push({ failure: { stack: '' }, location: 'here' });
+        expect(() => withoutStdOut(() => formatter.runEnd())).not.to.throw();
       });
     });
 
     describe('#contextLevelFailure', () => {
       it('is defined', () => {
-        expect(() => withoutConsole(() => formatter.contextLevelFailure(null, {description: ''}))).not.to.throw();
+        expect(() => withoutStdOut(() => formatter.contextLevelFailure(null, { description: '' }))).not.to.throw();
       });
 
       it('stores the failure', () => {
         const failed = { failure: true, description: '' };
-        withoutConsole(() => {
+        withoutStdOut(() => {
           formatter.contextLevelFailure(null, failed);
         });
         expect(formatter.failures).to.include(failed);
@@ -110,31 +111,61 @@ describe('Documentation', () => {
 
     describe('#exampleEnd', () => {
       it('is defined', () => {
-        expect(() => withoutConsole(() => formatter.exampleEnd())).not.to.throw();
+        expect(() => withoutStdOut(() => formatter.exampleEnd())).not.to.throw();
       });
 
       context('when time expires', () => {
-        it('adds a time in red', function(done) {
-          this.timeout(3000);
+        it('adds a time in red', () => {
           formatter.exampleStart();
-          setTimeout(
-            () => {
+          return new Promise(resolve => setTimeout(resolve, 2))
+            .then(() => {
               let spy;
-              withoutConsole(() => {
+              withoutStdOut(() => {
                 spy = sinon.spy(ansi, 'red');
-                formatter.exampleEnd();
+                formatter.exampleEnd(null, { timeout: 1 });
                 spy.restore();
               });
               expect(spy).to.have.been.calledWith(sinon.match(/\{\d*\s*ms}/));
-              done();
-            }, 2001);
+            });
+        });
+      });
+
+      context('when slow', () => {
+        it('adds a time in yellow', () => {
+          formatter.exampleStart();
+          return new Promise(resolve => setTimeout(resolve, 11))
+            .then(() => {
+              let spy;
+              withoutStdOut(() => {
+                spy = sinon.spy(ansi, 'yellow');
+                formatter.exampleEnd(null, { timeout: 30 });
+                spy.restore();
+              });
+              expect(spy).to.have.been.calledWith(sinon.match(/\{\d*\s*ms}/));
+            });
+        });
+      });
+
+      context('when very slow', () => {
+        it('adds a time in red', () => {
+          formatter.exampleStart();
+          return new Promise(resolve => setTimeout(resolve, 21))
+            .then(() => {
+              let spy;
+              withoutStdOut(() => {
+                spy = sinon.spy(ansi, 'red');
+                formatter.exampleEnd(null, { timeout: 30 });
+                spy.restore();
+              });
+              expect(spy).to.have.been.calledWith(sinon.match(/\{\d*\s*ms}/));
+            });
         });
       });
 
       context('with a failed context', () => {
         it('stores the failure', () => {
           const failed = { failure: true };
-          withoutConsole(() => {
+          withoutStdOut(() => {
             formatter.exampleEnd(null, failed);
           });
           expect(formatter.failures).to.include(failed);
@@ -144,12 +175,12 @@ describe('Documentation', () => {
 
     describe('#runEnd', () => {
       it('removes listeners', () => {
-        withoutConsole(() => executor.emit('runEnd'));
+        withoutStdOut(() => executor.emit('runEnd'));
         events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(0));
       });
 
       it("doesn't explode if the executor doesn't get passed", () => {
-        withoutConsole(() => formatter.runEnd());
+        withoutStdOut(() => formatter.runEnd());
         events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(1));
       });
 
@@ -158,25 +189,31 @@ describe('Documentation', () => {
           const red = sinon.spy(ansi, 'red');
           const green = sinon.spy(ansi, 'green');
           const light = sinon.spy(ansi, 'light');
-          withoutConsole(() => {
+          withoutStdOut(() => {
             const examples = [{
+              base: '__x',
               failure: {
                 constructor: { name: 'AssertionError' },
                 message: 'THE MESSAGE',
                 actual: 'wrong\nsame',
                 expected: 'right\nsame',
-                stack: ''
+                stack: 'THE MESSAGE'
               }
-            }, { failure: { stack: 'message\nTHE STACK' } }];
+            }, {
+              base: '__x',
+              failure: { stack: 'message\nTHE STACK' }
+            }];
+            formatter.fileStart(null, '__x');
             formatter.exampleEnd(null, examples[0]);
             formatter.exampleEnd(null, examples[1]);
+            formatter.fileEnd(null, '__x');
 
             formatter.runEnd();
           });
-          expect(red).to.have.been.calledWith(sinon.match(new RegExp('.*THE MESSAGE')));
+          expect(red).to.have.been.calledWithMatch(/.*THE MESSAGE/);
           expect(light).to.have.been.calledWith('THE STACK');
-          expect(red).to.have.been.calledWith(sinon.match(/Actual/));
-          expect(green).to.have.been.calledWith(sinon.match(/Expected/));
+          expect(red).to.have.been.calledWithMatch(/Actual/);
+          expect(green).to.have.been.calledWithMatch(/Expected/);
           red.restore();
           green.restore();
           light.restore();
@@ -185,11 +222,11 @@ describe('Documentation', () => {
         context('With pending tests', () => {
           it('sets it to yellow', () => {
             const yellow = sinon.spy(ansi, 'yellow');
-            withoutConsole(() => {
-              formatter.exampleEnd(null, {kind: 'pending'});
-              formatter.contextStart(null, 1, 'XContext', 'hello');
+            withoutStdOut(() => {
+              formatter.exampleEnd(null, { kind: 'pending' });
+              formatter.contextStart(null, { kind: 'XContext', description: 'hello' });
               formatter.contextEnd();
-              formatter.contextStart(null, 1, 'XContext', 'hello yourself');
+              formatter.contextStart(null, { kind: 'XContext', description: 'hello yourself' });
               formatter.contextEnd();
               formatter.runEnd();
             });
@@ -207,6 +244,24 @@ describe('Documentation', () => {
 
           expect(formatter.time).to.match(/\d+s/);
         });
+      });
+    });
+    context('with multiple streams', () => {
+      it('presents both', () => {
+        const stdOutWrite = sinon.stub(process.stdout, 'write');
+        try {
+          formatter.contextStart(null, { kind: '', base: '__x', description: 'first' });
+          formatter.contextStart(null, { kind: '', base: '__y', description: 'second' });
+          expect(stdOutWrite).to.have.been.calledWithMatch(/first/);
+          expect(stdOutWrite).not.to.have.been.calledWithMatch(/second/);
+          formatter.contextEnd(null, { base: '__x' });
+          formatter.contextEnd(null, { base: '__y' });
+          formatter.fileEnd(null, '__y');
+          formatter.fileEnd(null, '__x');
+          expect(stdOutWrite).to.have.been.calledWithMatch(/second/);
+        } finally {
+          stdOutWrite.restore();
+        }
       });
     });
   });

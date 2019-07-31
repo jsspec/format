@@ -6,6 +6,37 @@ const Null = require('./null');
 
 const ansi = require('../lib/ansi');
 
+class TargetStream {
+  constructor() {
+    this.active = false;
+    this.stream = '';
+    this.depth = 0;
+  }
+  write(data) {
+    if (this.active) {
+      process.stdout.write(data);
+    } else {
+      this.stream += data;
+    }
+  }
+
+  activate() {
+    if (this.stream.length) {
+      process.stdout.write(this.stream);
+      this.stream = '';
+    }
+    this.active = true;
+  }
+
+  close() {
+    this.closed = true;
+  }
+
+  start(time) {
+    this.exampleStart = time;
+  }
+}
+
 class Documentation extends Null {
   static get description() {
     return 'Documentation style reporter';
@@ -14,45 +45,72 @@ class Documentation extends Null {
   constructor(emitter) {
     super(emitter);
     this.timing = { start: process.hrtime.bigint() };
-    this.pendingContexts = {};
-    this.examples = {};
+    this.streams = new Map();
+    this.orderedStreamKeys = [];
     this.failures = [];
-    this.waitingFor = null;
     this.total = 0;
-    this.depth = 0;
-    this.stack = [];
     this.pendingTotal = 0;
   }
 
-  contextStart(_, id, contextType = '', description) {
-    this.pendingContexts[id] = { contextType, description, kind: 'context' };
-    if (contextType[0] === 'X') {
-      this.pendingTotal++;
-      description = ansi.light(ansi.yellow(description));
+  stream(context) {
+    const base = context.base;
+    let stream = this.streams.get(base);
+    if (!stream) {
+      stream = new TargetStream();
+      this.streams.set(base, stream);
+      if (!this.orderedStreamKeys.length) stream.activate();
+      this.orderedStreamKeys.push(base);
     }
-    this.depth++;
-    console.log('  '.repeat(this.depth) + description);
+    return stream;
   }
 
-  contextEnd() {
-    this.depth--;
+  endStream(name) {
+    let stream = this.streams.get(name);
+
+    if (!stream) return;
+    stream.close();
+    if (!stream.active) return;
+
+    while (stream && stream.closed) {
+      this.orderedStreamKeys.shift();
+      this.streams.delete(name);
+      let activeStreamKey = this.orderedStreamKeys[0];
+      stream = this.streams.get(activeStreamKey);
+      if (stream) stream.activate();
+    }
   }
 
-  exampleStart() {
-    this.stack.push(process.hrtime.bigint());
+  fileStart(_, name) { this.stream({ base: name }); }
+  exampleStart(_, example = {}) { this.stream(example).start(process.hrtime.bigint()); }
+
+  contextEnd(_, context = {}) { this.stream(context).depth--; }
+  fileEnd(_, name) { this.endStream(name); }
+
+  contextStart(_, context = { kind: '' }) {
+    let description = context.description;
+    if (context.kind[0] === 'X') {
+      this.pendingTotal++;
+      description = ansi.light(ansi.yellow(context.description));
+    }
+    const stream = this.stream(context);
+    stream.depth++;
+
+    stream.write('  '.repeat(stream.depth) + description + '\n');
   }
 
   exampleEnd(_, example = {}) {
-    let line = '  '.repeat(this.depth + 1);
+    const stream = this.stream(example);
+    const end = process.hrtime.bigint();
+    let start = stream.exampleStart || end;
+
+    let line = '  '.repeat(stream.depth + 1);
 
     if (example.kind === 'pending') {
       this.pendingTotal++;
       line += ansi.yellow('·· ') + ansi.light(example.description || '');
-      console.log(line);
+      stream.write(line + '\n');
       return;
     }
-    const end = process.hrtime.bigint();
-    const start = this.stack.pop() || end;
 
     let duration = Number((end - start) / MILLION);
 
@@ -61,59 +119,57 @@ class Documentation extends Null {
     }
     this.total++;
 
-
     if (example.failure) {
       line += ansi.cross + this.failures.length + ') ';
     } else {
       line += ansi.tick;
     }
     line += ansi.light(example.description || '');
-    if (duration > 200) line += ansi.light(ansi.red(' {' + duration + 'ms}'));
+    if (example.timeout && duration > 2 * example.timeout / 3) line += ansi.light(ansi.red(' {' + duration + 'ms}'));
+    else if (example.timeout && duration > example.timeout / 3) line += ansi.light(ansi.yellow(' {' + duration + 'ms}'));
 
-    console.log(line);
+    stream.write(line + '\n');
   }
 
   contextLevelFailure(_, exampleOrContext = {}) {
+    const stream = this.stream(exampleOrContext);
     this.failures.push(exampleOrContext);
 
-    let line = '  '.repeat(this.depth + 1) +
+    stream.write('  '.repeat(this.depth + 1) +
       ansi.cross + this.failures.length + ') ' +
-      ansi.light(exampleOrContext.description);
-
-    console.log(line);
+      ansi.light(exampleOrContext.description) + '\n');
   }
 
   runEnd(executor) {
     super.runEnd(executor);
     this.timing.end = process.hrtime.bigint();
-    console.log('');
-    console.log('');
+    process.stdout.write('\n\n');
 
     this.failures.forEach((example, index) => {
-      console.log((index + 1).toString().padStart(3, ' ') + ')' + example.fullDescription);
+      process.stdout.write(
+        (index + 1).toString().padStart(3, ' ') + ')' + example.fullDescription + '\n');
 
       if (example.failure.constructor.name === 'AssertionError') {
-        console.log(ansi.red('     ' + example.failure.message.trimRight()) + '\n');
+        process.stdout.write(ansi.red('     ' + example.failure.message.trimRight()) + '\n\n');
         let stack = example.failure.stack;
         if (stack.includes(example.failure.message)) {
           stack = stack.slice(stack.indexOf(example.failure.message) + example.failure.message.length);
         }
         stack = stack.replace(/^.*\n/, '');
 
-        console.log(ansi.light(stack));
+        process.stdout.write(ansi.light(stack) + '\n');
       } else {
         const stack = example.failure.stack.split('\n');
-        console.log(ansi.red('     ' + stack.shift()) + '\n');
-
-        console.log(ansi.light(stack.join('\n')));
+        process.stdout.write(ansi.red('     ' + stack.shift()) + '\n\n');
+        process.stdout.write(ansi.light(stack.join('\n')) + '\n');
       }
       if (example.failure.expected && example.failure.actual) {
-        console.log('    ' + ansi.red(' - Actual ') + ansi.green(' + Expected') + '\n');
-        console.log(differ(example.failure.expected, example.failure.actual).join(''));
+        process.stdout.write('    ' + ansi.red(' - Actual ') + ansi.green(' + Expected') + '\n\n');
+        process.stdout.write(differ(example.failure.expected, example.failure.actual).join('') + '\n');
       }
-      console.log('');
+      process.stdout.write('\n');
     });
-    console.log('');
+    process.stdout.write('\n');
 
     let summary = '';
     summary += `${this.total} example`;
@@ -129,17 +185,17 @@ class Documentation extends Null {
     summary += `, ${this.failures.length} failure`;
     if (this.failures.length !== 1) { summary += 's'; }
 
-    console.log(ansi[col](summary) + ansi.light(` (in ${this.time})`));
-    console.log('');
+    process.stdout.write(ansi[col](summary) + ansi.light(` (in ${this.time})\n\n`));
+
     if (this.failures.length) {
       let headerDone;
       this.failures.forEach(({ location = null, fullDescription = '' }) => {
         if (location) {
           if (!headerDone) {
             headerDone = true;
-            console.log('Failed examples:');
+            process.stdout.write('Failed examples:\n');
           }
-          console.log(ansi.red(`  jsspec ${location}`) + ansi.blue(` #${fullDescription}`));
+          process.stdout.write(ansi.red(`  jsspec ${location}`) + ansi.blue(` #${fullDescription}\n`));
         }
       });
     }
@@ -172,4 +228,5 @@ function differ(expected, actual) {
     return ansi.light(prefix('   ', block.value));
   });
 }
+
 module.exports = Documentation;
