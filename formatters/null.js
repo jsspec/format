@@ -22,35 +22,15 @@ class Null {
       eventWrap(executor, 'runEnd', this),
     ];
   }
-  
+
   /* eslint-disable no-unused-vars */
-  fileStart(executor, uniqueName) {
-
-  }
-
-  fileEnd(executor, uniqueName) {
-
-  }
-
-  contextStart(executor, context) {
-
-  }
-
-  contextEnd(executor, context) {
-
-  }
-
-  exampleStart(executor, example) {
-
-  }
-
-  exampleEnd(executor, example) {
-
-  }
-
-  contextLevelFailure(executor, example) {
-
-  }
+  fileStart(executor, uniqueName) {}
+  fileEnd(executor, uniqueName) {}
+  contextStart(executor, context) {}
+  contextEnd(executor, context) {}
+  exampleStart(executor, example) {}
+  exampleEnd(executor, example) {}
+  contextLevelFailure(executor, example) {}
 
   /* eslint-enable no-unused-vars */
   runEnd(executor) {
