@@ -31,7 +31,7 @@ class Dot extends Documentation {
     const stream = this.stream(example);
     const end = process.hrtime.bigint();
     const start = stream.exampleStart || end;
-    
+
     let duration = Number((end - start) / MILLION);
 
     if (example.failure) {
@@ -42,8 +42,8 @@ class Dot extends Documentation {
     if (example.failure) {
       process.stdout.write(ansi.red('X'));
     } else {
-      if (duration > 2 * example.timeout / 3) process.stdout.write(ansi.light(ansi.red('.')));
-      else if (duration > example.timeout / 3) process.stdout.write(ansi.light(ansi.yellow('.')));
+      if (example.timeout && duration > 2 * example.timeout / 3) process.stdout.write(ansi.light(ansi.red('.')));
+      else if (example.timeout && duration > example.timeout / 3) process.stdout.write(ansi.light(ansi.yellow('.')));
       else process.stdout.write(ansi.green('.'));
     }
   }

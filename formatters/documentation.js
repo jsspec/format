@@ -187,6 +187,8 @@ class Documentation extends Null {
 
     process.stdout.write(ansi[col](summary) + ansi.light(` (in ${this.time})\n\n`));
 
+    if(executor.settings.random) process.stdout.write(`Randomised with seed: ${executor.settings.seed}\n\n`);
+
     if (this.failures.length) {
       let headerDone;
       this.failures.forEach(({ location = null, fullDescription = '' }) => {
