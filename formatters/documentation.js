@@ -147,7 +147,7 @@ class Documentation extends Null {
 
     this.failures.forEach((example, index) => {
       process.stdout.write(
-        (index + 1).toString().padStart(3, ' ') + ')' + example.fullDescription + '\n');
+        (index + 1).toString().padStart(3, ' ') + ') ' + example.fullDescription + '\n');
 
       if (example.failure.constructor.name === 'AssertionError') {
         process.stdout.write(ansi.red('     ' + example.failure.message.trimRight()) + '\n\n');
@@ -197,7 +197,7 @@ class Documentation extends Null {
             headerDone = true;
             process.stdout.write('Failed examples:\n');
           }
-          process.stdout.write(ansi.red(`  jsspec ${location}`) + ansi.blue(` #${fullDescription}\n`));
+          process.stdout.write(ansi.red(`  jsspec ${location}`) + ansi.blue(` # ${fullDescription}\n`));
         }
       });
     }
