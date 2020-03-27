@@ -14,9 +14,9 @@ class Dot extends Documentation {
     super(emitter);
   }
 
-  contextStart(_, context) { this.stream(context).depth++; }
+  contextStart(_, context = { kind: '' }) { this.stream(context).depth++; }
 
-  contextLevelFailure(_, exampleOrContext = {}) {
+  contextLevelFailure(_, exampleOrContext) {
     process.stdout.write(ansi.red('X'));
     this.failures.push(exampleOrContext);
   }

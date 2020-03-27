@@ -13,20 +13,20 @@ class MyFormatter {
 
 subscribe to specRunner events:
 ```javascript
-  specRunner.on('fileStart' (specRunner, uniqueFileRunReference) => {});
-  specRunner.on('fileEnd' (specRunner, uniqueFileRunReference) => {});
+  specRunner.on('fileStart' (uniqueFileRunReference, fileName) => {});
+  specRunner.on('fileEnd' (uniqueFileRunReference, fileName) => {});
   specRunner.on('contextStart' (specRunner, context) => {});
   specRunner.on('contextEnd' (specRunner, context) => {});
   specRunner.on('exampleStart' (specRunner, example) => {});
   specRunner.on('exampleEnd' (specRunner, example) => {});
-  specRunner.on('contextLevelFailure' (specRunner, exampleOrContext) => {});
+  specRunner.on('contextLevelFailure', (specRunner, exampleOrContext) => {});
   specRunner.on('runEnd' (specRunner) => {});
 ```
 
 `context`, `example` and `exampleOrContext` each respond to the following:
 ```javascript
 id // [For a conetxt only] a unique name for this context
-description // the description supplied 
+description // the description supplied
 fullDescription // the description, with all context descriptions pre-pended
 kind // the class name of the object
 base // a uniq name relating to this spec file run

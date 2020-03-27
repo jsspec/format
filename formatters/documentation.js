@@ -1,5 +1,7 @@
 'use strict';
 const diff = require('diff');
+const path = require('path');
+
 const MILLION = BigInt(1000000);
 
 const Null = require('./null');
@@ -50,6 +52,7 @@ class Documentation extends Null {
     this.failures = [];
     this.total = 0;
     this.pendingTotal = 0;
+    this.cwd = process.cwd();
   }
 
   stream(context) {
@@ -81,12 +84,12 @@ class Documentation extends Null {
   }
 
   fileStart(_, name) { this.stream({ base: name }); }
-  exampleStart(_, example = {}) { this.stream(example).start(process.hrtime.bigint()); }
+  exampleStart(_, example) { this.stream(example).start(process.hrtime.bigint()); }
 
-  contextEnd(_, context = {}) { this.stream(context).depth--; }
+  contextEnd(_, context) { this.stream(context).depth--; }
   fileEnd(_, name) { this.endStream(name); }
 
-  contextStart(_, context = { kind: '' }) {
+  contextStart(_, context) {
     let description = context.description;
     if (context.kind[0] === 'X') {
       this.pendingTotal++;
@@ -98,7 +101,7 @@ class Documentation extends Null {
     stream.write('  '.repeat(stream.depth) + description + '\n');
   }
 
-  exampleEnd(_, example = {}) {
+  exampleEnd(_, example) {
     const stream = this.stream(example);
     const end = process.hrtime.bigint();
     let start = stream.exampleStart || end;
@@ -131,7 +134,7 @@ class Documentation extends Null {
     stream.write(line + '\n');
   }
 
-  contextLevelFailure(_, exampleOrContext = {}) {
+  contextLevelFailure(_, exampleOrContext) {
     const stream = this.stream(exampleOrContext);
     this.failures.push(exampleOrContext);
 
@@ -187,17 +190,23 @@ class Documentation extends Null {
 
     process.stdout.write(ansi[col](summary) + ansi.light(` (in ${this.time})\n\n`));
 
-    if(executor.settings.random) process.stdout.write(`Randomised with seed: ${executor.settings.seed}\n\n`);
+    if (executor && executor.settings && executor.settings.random)
+      process.stdout.write(`Randomised with seed: ${executor.settings.seed}\n\n`);
 
     if (this.failures.length) {
       let headerDone;
+
+      let command = "jsspec ";
+      if (executor && executor.settings && executor.settings.require && executor.settings.require.length) {
+        command += '-r ' + executor.settings.require.join(' ') + ' -- ';
+      }
       this.failures.forEach(({ location = null, fullDescription = '' }) => {
         if (location) {
           if (!headerDone) {
             headerDone = true;
             process.stdout.write('Failed examples:\n');
           }
-          process.stdout.write(ansi.red(`  jsspec ${location}`) + ansi.blue(` # ${fullDescription}\n`));
+          process.stdout.write(ansi.red(`  ${command}${path.relative(this.cwd,location)}`) + ansi.blue(` # ${fullDescription}\n`));
         }
       });
     }

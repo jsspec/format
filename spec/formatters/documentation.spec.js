@@ -1,8 +1,10 @@
 'use strict';
 
+const MILLION = 1000000n;
+
 const Documentation = require('../../formatters/documentation');
-const { EventEmitter } = require('events');
-const executor = new EventEmitter();
+
+require('./required_handlers_shared')();
 
 const sinon = require('sinon');
 const chai = require('chai');
@@ -21,174 +23,94 @@ const withoutStdOut = block => {
   }
 };
 
-const events = [
-  'fileStart',
-  'fileEnd',
-  'contextStart',
-  'contextEnd',
-  'exampleStart',
-  'exampleEnd',
-  'contextLevelFailure',
-  'runEnd',
-];
-
 describe('Documentation', () => {
+  require('./color_context_shared')();
+  includeContext('event handlers defined', Documentation);
+
   it('has a description',
     () => expect(Documentation.description).to.be.a('string').and.include('Documentation'));
 
-  afterEach(() => executor.removeAllListeners());
 
-  describe('instance', () => {
-    let formatter;
-    beforeEach(() => {
-      formatter = new Documentation(executor);
-      events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(1));
+  describe('#contextLevelFailure', () => {
+    it('stores the failure', () => {
+      const failed = { failure: true, description: '' };
+      withoutStdOut(() => formatter.contextLevelFailure(null, failed));
+      expect(formatter.failures).to.include(failed);
+    });
+  });
+
+  describe('#exampleEnd', () => {
+    set('key', '__1');
+    set('runnable', () => ({ base: key, kind: 'Context', timeout: timeout }));
+    set('timeout', 30);
+    set('runTime', () => 1 + timeout / 3);
+
+    set('hrtime', () => sinon.stub(process.hrtime, 'bigint')
+      .onFirstCall().returns(1n)
+      .onSecondCall().returns(BigInt(runTime + 1) * MILLION));
+
+    afterEach(() => hrtime.restore());
+
+    beforeEach('#fileStart', () => {
+      formatter.fileStart(key);
+      hrtime;
+      formatter.exampleStart(null, runnable);
     });
 
-    describe('#fileStart', () => {
-      it('is defined', () => {
-        expect(() => formatter.fileStart('')).not.to.throw();
+    includeContext('color spy');
+
+    context('when time expires', () => {
+      set('runTime', () => timeout + 1);
+      it('adds a time in red', () => {
+        withoutStdOut(() => formatter.exampleEnd(null, runnable));
+        expect(red).to.have.been.calledWith(sinon.match(/\{\d*\s*ms}/));
       });
     });
 
-    describe('#fileEnd', () => {
-      it('is defined', () => {
-        expect(() => formatter.fileEnd('')).not.to.throw();
+    context('when slow', () => {
+      set('runtime', () => 1 + timeout / 3);
+
+      it('adds a time in yellow', () => {
+        withoutStdOut(() => formatter.exampleEnd(null, runnable));
+        expect(yellow).to.have.been.calledWith(sinon.match(/\{\d*\s*ms}/));
       });
     });
+
+    context('when very slow', () => {
+      set('runTime', () => 1 + 2 * timeout / 3);
+
+      it('adds a time in red', () => {
+        withoutStdOut(() => formatter.exampleEnd(null, runnable));
+        expect(red).to.have.been.calledWith(sinon.match(/\{\d*\s*ms}/));
+      });
+    });
+
+    context('with a failed context', () => {
+      it('stores the failure', () => {
+        const failed = { failure: true };
+        withoutStdOut(() => formatter.exampleEnd(null, failed));
+        expect(formatter.failures).to.include(failed);
+      });
+    });
+  });
+
+  describe('color output', () => {
+    includeContext('color spy');
 
     describe('#contextStart', () => {
-      it('is defined', () => {
-        expect(() => withoutStdOut(() => formatter.contextStart())).not.to.throw();
-      });
-
       context('when the context is an "ignore" (X) type', () => {
         it('colors yellow', () => {
-          let yellow;
           withoutStdOut(() => {
-            yellow = sinon.spy(ansi, 'yellow');
             formatter.contextStart(null, { kind: 'X', description: 'test' });
-            yellow.restore();
           });
           expect(yellow).to.have.been.calledWith('test');
         });
       });
     });
 
-    describe('#contextEnd', () => {
-      it('is defined', () => {
-        expect(() => formatter.contextEnd()).not.to.throw();
-      });
-    });
-
-    describe('#exampleStart', () => {
-      it('is defined', () => {
-        expect(() => formatter.exampleStart()).not.to.throw();
-      });
-    });
-
     describe('#runEnd', () => {
-      it('triggers the header on summary', () => {
-        formatter.failures.push({ failure: { stack: '' } });
-        formatter.failures.push({ failure: { stack: '' }, location: 'here' });
-        expect(() => withoutStdOut(() => formatter.runEnd())).not.to.throw();
-      });
-    });
-
-    describe('#contextLevelFailure', () => {
-      it('is defined', () => {
-        expect(() => withoutStdOut(() => formatter.contextLevelFailure(null, { description: '' }))).not.to.throw();
-      });
-
-      it('stores the failure', () => {
-        const failed = { failure: true, description: '' };
-        withoutStdOut(() => {
-          formatter.contextLevelFailure(null, failed);
-        });
-        expect(formatter.failures).to.include(failed);
-      });
-    });
-
-    describe('#exampleEnd', () => {
-      it('is defined', () => {
-        expect(() => withoutStdOut(() => formatter.exampleEnd())).not.to.throw();
-      });
-
-      context('when time expires', () => {
-        it('adds a time in red', () => {
-          formatter.exampleStart();
-          return new Promise(resolve => setTimeout(resolve, 2))
-            .then(() => {
-              let spy;
-              withoutStdOut(() => {
-                spy = sinon.spy(ansi, 'red');
-                formatter.exampleEnd(null, { timeout: 1 });
-                spy.restore();
-              });
-              expect(spy).to.have.been.calledWith(sinon.match(/\{\d*\s*ms}/));
-            });
-        });
-      });
-
-      context('when slow', () => {
-        it('adds a time in yellow', () => {
-          formatter.exampleStart();
-          return new Promise(resolve => setTimeout(resolve, 11))
-            .then(() => {
-              let spy;
-              withoutStdOut(() => {
-                spy = sinon.spy(ansi, 'yellow');
-                formatter.exampleEnd(null, { timeout: 30 });
-                spy.restore();
-              });
-              expect(spy).to.have.been.calledWith(sinon.match(/\{\d*\s*ms}/));
-            });
-        });
-      });
-
-      context('when very slow', () => {
-        it('adds a time in red', () => {
-          formatter.exampleStart();
-          return new Promise(resolve => setTimeout(resolve, 21))
-            .then(() => {
-              let spy;
-              withoutStdOut(() => {
-                spy = sinon.spy(ansi, 'red');
-                formatter.exampleEnd(null, { timeout: 30 });
-                spy.restore();
-              });
-              expect(spy).to.have.been.calledWith(sinon.match(/\{\d*\s*ms}/));
-            });
-        });
-      });
-
-      context('with a failed context', () => {
-        it('stores the failure', () => {
-          const failed = { failure: true };
-          withoutStdOut(() => {
-            formatter.exampleEnd(null, failed);
-          });
-          expect(formatter.failures).to.include(failed);
-        });
-      });
-    });
-
-    describe('#runEnd', () => {
-      it('removes listeners', () => {
-        withoutStdOut(() => executor.emit('runEnd'));
-        events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(0));
-      });
-
-      it("doesn't explode if the executor doesn't get passed", () => {
-        withoutStdOut(() => formatter.runEnd());
-        events.forEach(event => expect(EventEmitter.listenerCount(executor, event)).to.eql(1));
-      });
-
       context('with failed contexts', () => {
         it('accesses the failure', () => {
-          const red = sinon.spy(ansi, 'red');
-          const green = sinon.spy(ansi, 'green');
-          const light = sinon.spy(ansi, 'light');
           withoutStdOut(() => {
             const examples = [{
               base: '__x',
@@ -214,55 +136,52 @@ describe('Documentation', () => {
           expect(light).to.have.been.calledWith('THE STACK');
           expect(red).to.have.been.calledWithMatch(/Actual/);
           expect(green).to.have.been.calledWithMatch(/Expected/);
-          red.restore();
-          green.restore();
-          light.restore();
         });
 
         context('With pending tests', () => {
           it('sets it to yellow', () => {
-            const yellow = sinon.spy(ansi, 'yellow');
             withoutStdOut(() => {
-              formatter.exampleEnd(null, { kind: 'pending' });
+              formatter.exampleEnd(null, { kind: 'pending', description: 'example' });
               formatter.contextStart(null, { kind: 'XContext', description: 'hello' });
-              formatter.contextEnd();
+              formatter.contextEnd(null, {});
               formatter.contextStart(null, { kind: 'XContext', description: 'hello yourself' });
-              formatter.contextEnd();
+              formatter.contextEnd(null, {});
               formatter.runEnd();
             });
-            yellow.restore();
             expect(yellow).to.have.been.calledWith('·· ');
             expect(yellow).to.have.been.calledWith('hello');
             expect(yellow).to.have.been.calledWith('hello yourself');
+            expect(light).to.have.been.calledWith('example')
           });
         });
       });
-      describe('#time', () => {
-        it("reports seconds when it's more than 1 sec", () => {
-          formatter.timing.start = BigInt(1000000000);
-          formatter.timing.end = BigInt(5000000000);
+    });
+    describe('#time', () => {
+      it("reports seconds when it's more than 1 sec", () => {
+        formatter.timing.start = BigInt(1000000000);
+        formatter.timing.end = BigInt(5000000000);
 
-          expect(formatter.time).to.match(/\d+s/);
-        });
+        expect(formatter.time).to.match(/\d+s/);
       });
     });
-    context('with multiple streams', () => {
-      it('presents both', () => {
-        const stdOutWrite = sinon.stub(process.stdout, 'write');
-        try {
-          formatter.contextStart(null, { kind: '', base: '__x', description: 'first' });
-          formatter.contextStart(null, { kind: '', base: '__y', description: 'second' });
-          expect(stdOutWrite).to.have.been.calledWithMatch(/first/);
-          expect(stdOutWrite).not.to.have.been.calledWithMatch(/second/);
-          formatter.contextEnd(null, { base: '__x' });
-          formatter.contextEnd(null, { base: '__y' });
-          formatter.fileEnd(null, '__y');
-          formatter.fileEnd(null, '__x');
-          expect(stdOutWrite).to.have.been.calledWithMatch(/second/);
-        } finally {
-          stdOutWrite.restore();
-        }
-      });
+  });
+
+  context('with multiple streams', () => {
+    it('presents both', () => {
+      const stdOutWrite = sinon.stub(process.stdout, 'write');
+      try {
+        formatter.contextStart(null, { kind: '', base: '__x', description: 'first' });
+        formatter.contextStart(null, { kind: '', base: '__y', description: 'second' });
+        expect(stdOutWrite).to.have.been.calledWithMatch(/first/);
+        expect(stdOutWrite).not.to.have.been.calledWithMatch(/second/);
+        formatter.contextEnd(null, { base: '__x' });
+        formatter.contextEnd(null, { base: '__y' });
+        formatter.fileEnd(null, '__y');
+        formatter.fileEnd(null, '__x');
+        expect(stdOutWrite).to.have.been.calledWithMatch(/second/);
+      } finally {
+        stdOutWrite.restore();
+      }
     });
   });
 });
