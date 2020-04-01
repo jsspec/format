@@ -14,7 +14,7 @@ class Dot extends Documentation {
     super(emitter);
   }
 
-  contextStart(_, context = { kind: '' }) { this.stream(context).depth++; }
+  contextStart(_, context = { kind: '' }) { this.streams.get(context.base).depth++; }
 
   contextLevelFailure(_, exampleOrContext) {
     process.stdout.write(ansi.red('X'));
@@ -28,7 +28,7 @@ class Dot extends Documentation {
       return;
     }
 
-    const stream = this.stream(example);
+    const stream = this.streams.get(example.base);
     const end = process.hrtime.bigint();
     const start = stream.exampleStart || end;
 

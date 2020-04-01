@@ -33,7 +33,13 @@ const events = [
 
 module.exports = () => sharedContext('event handlers defined', (FormatterClass) => {
   subject('formatter', () => new FormatterClass(executor));
-  set('executor', () => new EventEmitter());
+  set('executor', () => {
+    const ex = new EventEmitter();
+    ex.settings = settings;
+    return ex;
+  });
+
+  set('settings', {});
 
   beforeEach(() => {
     formatter;

@@ -110,27 +110,46 @@ describe('Documentation', () => {
 
     describe('#runEnd', () => {
       context('with failed contexts', () => {
+        set('examples', () => [{
+          base: '__x',
+          location: 'some_file.js:123',
+          failure: {
+            constructor: { name: 'AssertionError' },
+            message: 'THE MESSAGE',
+            actual: 'wrong\nsame',
+            expected: 'right\nsame',
+            stack: 'THE MESSAGE'
+          }
+        }, {
+          base: '__x',
+          failure: { stack: 'message\nTHE STACK' }
+        }]);
+
+        context('when executed with require', () => {
+          set('settings', () => ({ require: ['required_file.js'] }));
+
+          it('reports the require files in the executable line', () => {
+            withoutStdOut(() => {
+              formatter.fileStart(null, '__x');
+              formatter.exampleEnd(null, examples[0]);
+              formatter.exampleEnd(null, examples[1]);
+              formatter.fileEnd(null, '__x');
+
+              formatter.runEnd(executor);
+            });
+
+            expect(red).to.have.been.calledWithMatch(new RegExp(` -r ${settings.require.join(' ')} --`));
+          });
+        });
+
         it('accesses the failure', () => {
           withoutStdOut(() => {
-            const examples = [{
-              base: '__x',
-              failure: {
-                constructor: { name: 'AssertionError' },
-                message: 'THE MESSAGE',
-                actual: 'wrong\nsame',
-                expected: 'right\nsame',
-                stack: 'THE MESSAGE'
-              }
-            }, {
-              base: '__x',
-              failure: { stack: 'message\nTHE STACK' }
-            }];
             formatter.fileStart(null, '__x');
             formatter.exampleEnd(null, examples[0]);
             formatter.exampleEnd(null, examples[1]);
             formatter.fileEnd(null, '__x');
 
-            formatter.runEnd();
+            formatter.runEnd(executor);
           });
           expect(red).to.have.been.calledWithMatch(/.*THE MESSAGE/);
           expect(light).to.have.been.calledWith('THE STACK');

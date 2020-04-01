@@ -14,6 +14,7 @@ class TargetStream {
     this.stream = '';
     this.depth = 0;
   }
+
   write(data) {
     if (this.active) {
       process.stdout.write(data);
@@ -32,10 +33,48 @@ class TargetStream {
 
   close() {
     this.closed = true;
+    return this;
   }
 
-  start(time) {
-    this.exampleStart = time;
+  start() {
+    this.exampleStart = process.hrtime.bigint();
+  }
+}
+
+const ACTIVE_STREAM = Symbol.for('active stream');
+
+class Streams extends Map {
+  constructor(...args) {
+    super(...args);
+    this.ordered = [];
+  }
+
+  get(name) {
+    let stream = super.get(name);
+    if (!stream) {
+      stream = new TargetStream();
+      this.ordered.push(stream);
+      this.set(name, stream);
+      this.active;
+    }
+    return stream;
+  }
+
+  get active() {
+    let stream;
+    while (stream = this.ordered[0]) {
+      stream.activate();
+      if (stream.closed) this.ordered.shift();
+      else return stream;
+    }
+  }
+
+  close(name = ACTIVE_STREAM) {
+    if (name === ACTIVE_STREAM || this.get(name).close().active) {
+      this.ordered.shift();
+      this.delete(name);
+      this.active;
+    }
   }
 }
 
@@ -47,47 +86,18 @@ class Documentation extends Null {
   constructor(emitter) {
     super(emitter);
     this.timing = { start: process.hrtime.bigint() };
-    this.streams = new Map();
-    this.orderedStreamKeys = [];
+    this.streams = new Streams();
     this.failures = [];
     this.total = 0;
     this.pendingTotal = 0;
     this.cwd = process.cwd();
   }
 
-  stream(context) {
-    const base = context.base;
-    let stream = this.streams.get(base);
-    if (!stream) {
-      stream = new TargetStream();
-      this.streams.set(base, stream);
-      if (!this.orderedStreamKeys.length) stream.activate();
-      this.orderedStreamKeys.push(base);
-    }
-    return stream;
-  }
+  fileStart(_, name) { this.streams.get(name); }
+  exampleStart(_, example) { this.streams.get(example.base).start(); }
 
-  endStream(name) {
-    let stream = this.streams.get(name);
-
-    if (!stream) return;
-    stream.close();
-    if (!stream.active) return;
-
-    while (stream && stream.closed) {
-      this.orderedStreamKeys.shift();
-      this.streams.delete(name);
-      let activeStreamKey = this.orderedStreamKeys[0];
-      stream = this.streams.get(activeStreamKey);
-      if (stream) stream.activate();
-    }
-  }
-
-  fileStart(_, name) { this.stream({ base: name }); }
-  exampleStart(_, example) { this.stream(example).start(process.hrtime.bigint()); }
-
-  contextEnd(_, context) { this.stream(context).depth--; }
-  fileEnd(_, name) { this.endStream(name); }
+  contextEnd(_, context) { this.streams.get(context.base).depth--; }
+  fileEnd(_, name) { this.streams.close(name); }
 
   contextStart(_, context) {
     let description = context.description;
@@ -95,14 +105,14 @@ class Documentation extends Null {
       this.pendingTotal++;
       description = ansi.light(ansi.yellow(context.description));
     }
-    const stream = this.stream(context);
+    const stream = this.streams.get(context.base);
     stream.depth++;
 
     stream.write('  '.repeat(stream.depth) + description + '\n');
   }
 
   exampleEnd(_, example) {
-    const stream = this.stream(example);
+    const stream = this.streams.get(example.base);
     const end = process.hrtime.bigint();
     let start = stream.exampleStart || end;
 
@@ -110,7 +120,7 @@ class Documentation extends Null {
 
     if (example.kind === 'pending') {
       this.pendingTotal++;
-      line += ansi.yellow('·· ') + ansi.light(example.description || '');
+      line += ansi.yellow('·· ') + ansi.light(example.description);
       stream.write(line + '\n');
       return;
     }
@@ -135,15 +145,18 @@ class Documentation extends Null {
   }
 
   contextLevelFailure(_, exampleOrContext) {
-    const stream = this.stream(exampleOrContext);
     this.failures.push(exampleOrContext);
 
-    stream.write('  '.repeat(this.depth + 1) +
-      ansi.cross + this.failures.length + ') ' +
-      ansi.light(exampleOrContext.description) + '\n');
+    this.streams
+      .get(exampleOrContext.base)
+      .write('  '.repeat(this.depth + 1) +
+        ansi.cross + this.failures.length + ') ' +
+        ansi.light(exampleOrContext.description) + '\n');
   }
 
   runEnd(executor) {
+    while (this.streams.active) { this.streams.close(); }
+
     super.runEnd(executor);
     this.timing.end = process.hrtime.bigint();
     process.stdout.write('\n\n');
@@ -206,7 +219,7 @@ class Documentation extends Null {
             headerDone = true;
             process.stdout.write('Failed examples:\n');
           }
-          process.stdout.write(ansi.red(`  ${command}${path.relative(this.cwd,location)}`) + ansi.blue(` # ${fullDescription}\n`));
+          process.stdout.write(ansi.red(`  ${command}${path.relative(this.cwd, location)}`) + ansi.blue(` # ${fullDescription}\n`));
         }
       });
     }
