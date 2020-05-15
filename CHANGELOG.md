@@ -1,3 +1,6 @@
+*** 0.1.4
+* Allow error output when no stack is present
+
 *** 0.1.3
 * Change reporting to allow for the removed leading space from `jsspec`
 

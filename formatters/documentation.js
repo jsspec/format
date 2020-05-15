@@ -167,17 +167,19 @@ class Documentation extends Null {
 
       if (example.failure.constructor.name === 'AssertionError') {
         process.stdout.write(ansi.red('     ' + example.failure.message.trimRight()) + '\n\n');
-        let stack = example.failure.stack;
+        let stack = example.failure.stack || '';
         if (stack.includes(example.failure.message)) {
           stack = stack.slice(stack.indexOf(example.failure.message) + example.failure.message.length);
         }
         stack = stack.replace(/^.*\n/, '');
 
         process.stdout.write(ansi.light(stack) + '\n');
-      } else {
+      } else if (example.failure.stack) {
         const stack = example.failure.stack.split('\n');
         process.stdout.write(ansi.red('     ' + stack.shift()) + '\n\n');
         process.stdout.write(ansi.light(stack.join('\n')) + '\n');
+      } else if (example.failure.message) {
+        process.stdout.write(ansi.red('     ' + example.failure.message.trimRight()) + '\n\n');
       }
       if (example.failure.expected && example.failure.actual) {
         process.stdout.write('    ' + ansi.red(' - Actual ') + ansi.green(' + Expected') + '\n\n');

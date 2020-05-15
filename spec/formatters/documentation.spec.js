@@ -110,6 +110,8 @@ describe('Documentation', () => {
 
     describe('#runEnd', () => {
       context('with failed contexts', () => {
+        set('failure', { stack: 'message\nTHE STACK' });
+
         set('examples', () => [{
           base: '__x',
           location: 'some_file.js:123',
@@ -122,7 +124,7 @@ describe('Documentation', () => {
           }
         }, {
           base: '__x',
-          failure: { stack: 'message\nTHE STACK' }
+          failure
         }]);
 
         context('when executed with require', () => {
@@ -139,6 +141,24 @@ describe('Documentation', () => {
             });
 
             expect(red).to.have.been.calledWithMatch(new RegExp(` -r ${settings.require.join(' ')} --`));
+          });
+        });
+
+        context('with no stack', () => {
+          set('failure', { message: 'Oops' });
+
+          it('reports just the message', () => {
+
+            withoutStdOut(() => {
+              formatter.fileStart(null, '__x');
+              formatter.exampleEnd(null, examples[0]);
+              formatter.exampleEnd(null, examples[1]);
+              formatter.fileEnd(null, '__x');
+
+              formatter.runEnd(executor);
+            });
+
+            expect(red).to.have.been.calledWithMatch(/\s*Oops/);
           });
         });
 
@@ -170,7 +190,7 @@ describe('Documentation', () => {
             expect(yellow).to.have.been.calledWith('·· ');
             expect(yellow).to.have.been.calledWith('hello');
             expect(yellow).to.have.been.calledWith('hello yourself');
-            expect(light).to.have.been.calledWith('example')
+            expect(light).to.have.been.calledWith('example');
           });
         });
       });
