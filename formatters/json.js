@@ -26,7 +26,7 @@ class Record {
     this.results.push(json);
   }
   addError(error) {
-    const { base, id, ...json } = { status: "error", ...(error.toJSON ? error.toJSON() : error) }
+    const { base, id, ...json } = { status: "error", ...(error.toJSON ? error.toJSON() : error) };
     this.results.push(json);
   }
 

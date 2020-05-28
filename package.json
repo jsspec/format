@@ -1,11 +1,11 @@
 {
   "name": "@jsspec/format",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Output formatter for jsspec",
   "main": "index.js",
   "scripts": {
-    "test": "jsspec -r chai/register-expect",
-    "coverage": "c8 --clean --all npm test"
+    "test": "jsspec -r spec/spec_helper.js ",
+    "coverage": "c8 --all=true --clean=true -r html -r text jsspec -r spec/spec_helper.js -fo -b"
   },
   "repository": {
     "type": "git",

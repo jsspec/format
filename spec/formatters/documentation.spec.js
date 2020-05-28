@@ -6,12 +6,6 @@ const Documentation = require('../../formatters/documentation');
 
 require('./required_handlers_shared')();
 
-const sinon = require('sinon');
-const chai = require('chai');
-const sinonChai = require('sinon-chai');
-
-chai.use(sinonChai);
-
 const ansi = require('../../lib/ansi');
 
 const withoutStdOut = block => {
@@ -109,6 +103,24 @@ describe('Documentation', () => {
     });
 
     describe('#runEnd', () => {
+      context('when run with random', () => {
+        set('settings', { random: true, seed: 1234 });
+
+        it('reports the seed', () => {
+
+          const stdOutWrite = sinon.stub(process.stdout, 'write');
+          try {
+            formatter.fileStart(null, '__x');
+            formatter.fileEnd(null, '__x');
+            formatter.runEnd(executor);
+
+            expect(stdOutWrite).to.have.been.calledWithMatch(/seed: 1234/);
+          } finally {
+            stdOutWrite.restore();
+          }
+
+        });
+      });
       context('with failed contexts', () => {
         set('failure', { stack: 'message\nTHE STACK' });
 

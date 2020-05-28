@@ -2,12 +2,6 @@
 
 const { EventEmitter } = require('events');
 
-const sinon = require('sinon');
-const chai = require('chai');
-const sinonChai = require('sinon-chai');
-
-chai.use(sinonChai);
-
 const ansi = require('../../lib/ansi');
 
 
@@ -52,14 +46,14 @@ module.exports = () => sharedContext('event handlers defined', (FormatterClass) 
     set('runnable', () => ({ base: key, kind: 'Context', description: '' }));
 
     beforeEach('#fileStart', () => {
-      expect(() => formatter.fileStart(key)).not.to.throw()
+      expect(() => formatter.fileStart(key)).not.to.throw();
     });
 
     it('#fileEnd', () => expect(() => withoutStdOut(() => formatter.fileEnd(key))).not.to.throw());
     it('#contextStart', () => expect(() => withoutStdOut(() => formatter.contextStart(null, runnable))).not.to.throw());
     it('#contextEnd', () => expect(() => formatter.contextEnd(null, runnable)).not.to.throw());
     it('#exampleStart', () => {
-      expect(() => formatter.exampleStart(null, runnable)).not.to.throw()
+      expect(() => formatter.exampleStart(null, runnable)).not.to.throw();
     });
 
     it('#runEnd', () => {

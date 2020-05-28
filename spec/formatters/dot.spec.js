@@ -5,12 +5,6 @@ const MILLION = 1000000n;
 
 require('./required_handlers_shared')();
 
-const sinon = require('sinon');
-const chai = require('chai');
-const sinonChai = require('sinon-chai');
-
-chai.use(sinonChai);
-
 const ansi = require('../../lib/ansi');
 
 const withoutStdOut = block => {

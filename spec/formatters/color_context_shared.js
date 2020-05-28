@@ -1,4 +1,3 @@
-const sinon = require('sinon');
 const ansi = require('../../lib/ansi');
 
 module.exports = () => sharedContext('color spy', () => {
