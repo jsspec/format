@@ -5,8 +5,7 @@ const Json = require('../../formatters/json');
 require('./required_handlers_shared')();
 
 describe('Json', () => {
-  it('has a description',
-    () => expect(Json.description).to.be.a('string').and.include('JSON'));
+  it('has a description', () => expect(Json.description).to.be.a('string').and.include('JSON'));
 
   includeContext('event handlers defined', Json);
   set('kind', 'it');
@@ -67,7 +66,6 @@ describe('Json', () => {
     });
 
     describe('with a context failure', () => {
-
       it('calls to JSON', () => {
         try {
           formatter.contextLevelFailure(null, example);

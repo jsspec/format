@@ -20,9 +20,7 @@ describe('Dot', () => {
   require('./color_context_shared')();
   includeContext('event handlers defined', Dot);
 
-  it('has a description',
-    () => expect(Dot.description).to.be.a('string').and.include('Dot'));
-
+  it('has a description', () => expect(Dot.description).to.be.a('string').and.include('Dot'));
 
   describe('#contextLevelFailure', () => {
     it('stores the failure', () => {
@@ -41,10 +39,15 @@ describe('Dot', () => {
   set('key', '__1');
   set('runnable', () => ({ base: key, kind: 'Context', timeout: timeout }));
 
-  set('hrtime', () => sinon.stub(process.hrtime, 'bigint')
-    .onFirstCall().returns(1n)
-    .onSecondCall().returns(BigInt(runTime + 1) * MILLION)
-    .returns(1n));
+  set('hrtime', () =>
+    sinon
+      .stub(process.hrtime, 'bigint')
+      .onFirstCall()
+      .returns(1n)
+      .onSecondCall()
+      .returns(BigInt(runTime + 1) * MILLION)
+      .returns(1n)
+  );
 
   beforeEach('#fileStart', () => {
     formatter.fileStart(key);
@@ -70,7 +73,7 @@ describe('Dot', () => {
     });
 
     context('when real slow', () => {
-      set('runTime', () => 1 + 2 * timeout / 3);
+      set('runTime', () => 1 + (2 * timeout) / 3);
 
       it('dots red', { timeout: 400 }, () => {
         withoutStdOut(() => formatter.exampleEnd(null, runnable));
@@ -83,15 +86,18 @@ describe('Dot', () => {
     context('with failed contexts', () => {
       it('accesses the failure', () => {
         withoutStdOut(() => {
-          const examples = [{
-            failure: {
-              constructor: { name: 'AssertionError' },
-              message: 'THE MESSAGE',
-              actual: 'wrong\nsame',
-              expected: 'right\nsame',
-              stack: ''
-            }
-          }, { failure: { stack: 'message\nTHE STACK' } }];
+          const examples = [
+            {
+              failure: {
+                constructor: { name: 'AssertionError' },
+                message: 'THE MESSAGE',
+                actual: 'wrong\nsame',
+                expected: 'right\nsame',
+                stack: '',
+              },
+            },
+            { failure: { stack: 'message\nTHE STACK' } },
+          ];
           formatter.exampleEnd(null, examples[0]);
           formatter.exampleEnd(null, examples[1]);
 

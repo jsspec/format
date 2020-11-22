@@ -21,9 +21,7 @@ describe('Documentation', () => {
   require('./color_context_shared')();
   includeContext('event handlers defined', Documentation);
 
-  it('has a description',
-    () => expect(Documentation.description).to.be.a('string').and.include('Documentation'));
-
+  it('has a description', () => expect(Documentation.description).to.be.a('string').and.include('Documentation'));
 
   describe('#contextLevelFailure', () => {
     it('stores the failure', () => {
@@ -39,9 +37,14 @@ describe('Documentation', () => {
     set('timeout', 30);
     set('runTime', () => 1 + timeout / 3);
 
-    set('hrtime', () => sinon.stub(process.hrtime, 'bigint')
-      .onFirstCall().returns(1n)
-      .onSecondCall().returns(BigInt(runTime + 1) * MILLION));
+    set('hrtime', () =>
+      sinon
+        .stub(process.hrtime, 'bigint')
+        .onFirstCall()
+        .returns(1n)
+        .onSecondCall()
+        .returns(BigInt(runTime + 1) * MILLION)
+    );
 
     afterEach(() => hrtime.restore());
 
@@ -71,7 +74,7 @@ describe('Documentation', () => {
     });
 
     context('when very slow', () => {
-      set('runTime', () => 1 + 2 * timeout / 3);
+      set('runTime', () => 1 + (2 * timeout) / 3);
 
       it('adds a time in red', () => {
         withoutStdOut(() => formatter.exampleEnd(null, runnable));
@@ -107,7 +110,6 @@ describe('Documentation', () => {
         set('settings', { random: true, seed: 1234 });
 
         it('reports the seed', () => {
-
           const stdOutWrite = sinon.stub(process.stdout, 'write');
           try {
             formatter.fileStart(null, '__x');
@@ -118,30 +120,32 @@ describe('Documentation', () => {
           } finally {
             stdOutWrite.restore();
           }
-
         });
       });
 
       context('with failed contexts', () => {
         set('failure', { stack: 'message\nTHE STACK' });
 
-        set('examples', () => [{
-          base: '__x',
-          location: 'some_file.js:123',
-          failure: {
-            constructor: { name: 'AssertionError' },
-            message: 'THE MESSAGE',
-            actual: 'wrong\nsame',
-            expected: 'right\nsame',
-            stack: 'THE MESSAGE'
-          }
-        }, {
-          base: '__x',
-          failure
-        }]);
+        set('examples', () => [
+          {
+            base: '__x',
+            location: 'some_file.js:123',
+            failure: {
+              constructor: { name: 'AssertionError' },
+              message: 'THE MESSAGE',
+              actual: 'wrong\nsame',
+              expected: 'right\nsame',
+              stack: 'THE MESSAGE',
+            },
+          },
+          {
+            base: '__x',
+            failure,
+          },
+        ]);
 
         context('when one of the objects is a function', () => {
-          set('failure', { actual: setInterval, expected: 1})
+          set('failure', { actual: setInterval, expected: 1 });
 
           it('works fine', () => {
             withoutStdOut(() => {
@@ -178,7 +182,6 @@ describe('Documentation', () => {
           set('failure', { message: 'Oops' });
 
           it('reports just the message', () => {
-
             withoutStdOut(() => {
               formatter.fileStart(null, '__x');
               formatter.exampleEnd(null, examples[0]);

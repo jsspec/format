@@ -3,7 +3,9 @@
 const ansi = require('../lib/ansi');
 
 const eventWrap = (executor, event, self) => {
-  function listener(...args) { self[event](this, ...args); }
+  function listener(...args) {
+    self[event](this, ...args);
+  }
   executor.on(event, listener);
   return [event, listener];
 };
@@ -28,13 +30,13 @@ class Null {
   }
 
   /* eslint-disable no-unused-vars */
-  fileStart(uniqueName, fileName) { }
-  fileEnd(uniqueName, fileName) { }
-  contextStart(executor, context) { }
-  contextEnd(executor, context) { }
-  exampleStart(executor, example) { }
-  exampleEnd(executor, example) { }
-  contextLevelFailure(executor, example) { }
+  fileStart(uniqueName, fileName) {}
+  fileEnd(uniqueName, fileName) {}
+  contextStart(executor, context) {}
+  contextEnd(executor, context) {}
+  exampleStart(executor, example) {}
+  exampleEnd(executor, example) {}
+  contextLevelFailure(executor, example) {}
 
   /* eslint-enable no-unused-vars */
   runEnd(executor) {

@@ -6,9 +6,7 @@ const ansi = require('../../lib/ansi');
 require('./required_handlers_shared')();
 
 describe('Null', () => {
-
-  it('has a description',
-    () => expect(Null.description).to.be.a('string').and.include('nothing'));
+  it('has a description', () => expect(Null.description).to.be.a('string').and.include('nothing'));
 
   includeContext('event handlers defined', Null);
 

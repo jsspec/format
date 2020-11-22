@@ -7,8 +7,7 @@ const Null = require('./null');
 
 const ansi = require('../lib/ansi');
 
-const tidy = reports => reports
-  .filter(report => 'bigint' != typeof report);
+const tidy = reports => reports.filter(report => 'bigint' != typeof report);
 
 class Record {
   constructor() {
@@ -26,7 +25,7 @@ class Record {
     this.results.push(json);
   }
   addError(error) {
-    const { base, id, ...json } = { status: "error", ...(error.toJSON ? error.toJSON() : error) };
+    const { base, id, ...json } = { status: 'error', ...(error.toJSON ? error.toJSON() : error) };
     this.results.push(json);
   }
 
@@ -39,7 +38,9 @@ class Record {
 }
 
 class Json extends Null {
-  static get description() { return 'JSON reporter'; }
+  static get description() {
+    return 'JSON reporter';
+  }
 
   constructor(executor) {
     super(executor);

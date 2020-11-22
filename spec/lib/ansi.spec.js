@@ -56,6 +56,5 @@ describe('ansi', () => {
       expect(ansi.tick).to.eql('✔︎  ');
       expect(ansi.cross).to.eql('✘  ');
     });
-
   });
 });

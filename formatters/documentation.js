@@ -62,7 +62,7 @@ class Streams extends Map {
 
   get active() {
     let stream;
-    while (stream = this.ordered[0]) {
+    while ((stream = this.ordered[0])) {
       stream.activate();
       if (stream.closed) this.ordered.shift();
       else return stream;
@@ -93,11 +93,19 @@ class Documentation extends Null {
     this.cwd = process.cwd();
   }
 
-  fileStart(_, name) { this.streams.get(name); }
-  exampleStart(_, example) { this.streams.get(example.base).start(); }
+  fileStart(_, name) {
+    this.streams.get(name);
+  }
+  exampleStart(_, example) {
+    this.streams.get(example.base).start();
+  }
 
-  contextEnd(_, context) { this.streams.get(context.base).depth--; }
-  fileEnd(_, name) { this.streams.close(name); }
+  contextEnd(_, context) {
+    this.streams.get(context.base).depth--;
+  }
+  fileEnd(_, name) {
+    this.streams.close(name);
+  }
 
   contextStart(_, context) {
     let description = context.description;
@@ -138,7 +146,7 @@ class Documentation extends Null {
       line += ansi.tick;
     }
     line += ansi.light(example.description || '');
-    if (example.timeout && duration > 2 * example.timeout / 3) line += ansi.light(ansi.red(' {' + duration + 'ms}'));
+    if (example.timeout && duration > (2 * example.timeout) / 3) line += ansi.light(ansi.red(' {' + duration + 'ms}'));
     else if (example.timeout && duration > example.timeout / 3) line += ansi.light(ansi.yellow(' {' + duration + 'ms}'));
 
     stream.write(line + '\n');
@@ -149,21 +157,20 @@ class Documentation extends Null {
 
     this.streams
       .get(exampleOrContext.base)
-      .write('  '.repeat(this.depth + 1) +
-        ansi.cross + this.failures.length + ') ' +
-        ansi.light(exampleOrContext.description) + '\n');
+      .write('  '.repeat(this.depth + 1) + ansi.cross + this.failures.length + ') ' + ansi.light(exampleOrContext.description) + '\n');
   }
 
   runEnd(executor) {
-    while (this.streams.active) { this.streams.close(); }
+    while (this.streams.active) {
+      this.streams.close();
+    }
 
     super.runEnd(executor);
     this.timing.end = process.hrtime.bigint();
     process.stdout.write('\n\n');
 
     this.failures.forEach((example, index) => {
-      process.stdout.write(
-        (index + 1).toString().padStart(3, ' ') + ') ' + example.fullDescription + '\n');
+      process.stdout.write((index + 1).toString().padStart(3, ' ') + ') ' + example.fullDescription + '\n');
 
       if (example.failure.constructor.name === 'AssertionError') {
         process.stdout.write(ansi.red('     ' + example.failure.message.trimRight()) + '\n\n');
@@ -192,26 +199,31 @@ class Documentation extends Null {
     let summary = '';
     summary += `${this.total} example`;
     let col = 'green';
-    if (this.total !== 1) { summary += 's'; }
+    if (this.total !== 1) {
+      summary += 's';
+    }
 
     if (this.pendingTotal) {
       col = 'yellow';
       summary += `, ${this.pendingTotal} pending`;
     }
 
-    if (this.failures.length) { col = 'red'; }
+    if (this.failures.length) {
+      col = 'red';
+    }
     summary += `, ${this.failures.length} failure`;
-    if (this.failures.length !== 1) { summary += 's'; }
+    if (this.failures.length !== 1) {
+      summary += 's';
+    }
 
     process.stdout.write(ansi[col](summary) + ansi.light(` (in ${this.time})\n\n`));
 
-    if (executor && executor.settings && executor.settings.random)
-      process.stdout.write(`Randomised with seed: ${executor.settings.seed}\n\n`);
+    if (executor && executor.settings && executor.settings.random) process.stdout.write(`Randomised with seed: ${executor.settings.seed}\n\n`);
 
     if (this.failures.length) {
       let headerDone;
 
-      let command = "jsspec ";
+      let command = 'jsspec ';
       if (executor && executor.settings && executor.settings.require && executor.settings.require.length) {
         command += '-r ' + executor.settings.require.join(' ') + ' -- ';
       }
@@ -230,7 +242,7 @@ class Documentation extends Null {
   get time() {
     let total = Number((this.timing.end - this.timing.start) / MILLION);
     if (total < 1000) return total + 'ms';
-    return (total / 1000) + 's';
+    return total / 1000 + 's';
   }
 }
 
@@ -243,10 +255,10 @@ const prefix = (prefix, str) => {
 
 function differ(expected, actual) {
   let blocks;
-  if(typeof expected === 'function') {
-    if(typeof actual !== 'function') blocks = diff.diffJson(`[function ${expected.name}]`, actual);
+  if (typeof expected === 'function') {
+    if (typeof actual !== 'function') blocks = diff.diffJson(`[function ${expected.name}]`, actual);
     else return [ansi.red(prefix(' - ', `[function ${expected.name}]`)), ansi.green(prefix(' + ', `[function ${actual.name}]`))];
-  } else if (typeof actual === 'function') blocks = diff.diffJson(expected, `[function ${actual.name}]`)
+  } else if (typeof actual === 'function') blocks = diff.diffJson(expected, `[function ${actual.name}]`);
   else blocks = diff.diffJson(expected, actual);
 
   return blocks.map(block => {

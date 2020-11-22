@@ -14,7 +14,9 @@ class Dot extends Documentation {
     super(emitter);
   }
 
-  contextStart(_, context = { kind: '' }) { this.streams.get(context.base).depth++; }
+  contextStart(_, context = { kind: '' }) {
+    this.streams.get(context.base).depth++;
+  }
 
   contextLevelFailure(_, exampleOrContext) {
     process.stdout.write(ansi.red('X'));
@@ -42,7 +44,7 @@ class Dot extends Documentation {
     if (example.failure) {
       process.stdout.write(ansi.red('X'));
     } else {
-      if (example.timeout && duration > 2 * example.timeout / 3) process.stdout.write(ansi.light(ansi.red('.')));
+      if (example.timeout && duration > (2 * example.timeout) / 3) process.stdout.write(ansi.light(ansi.red('.')));
       else if (example.timeout && duration > example.timeout / 3) process.stdout.write(ansi.light(ansi.yellow('.')));
       else process.stdout.write(ansi.green('.'));
     }
