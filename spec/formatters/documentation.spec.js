@@ -121,6 +121,7 @@ describe('Documentation', () => {
 
         });
       });
+
       context('with failed contexts', () => {
         set('failure', { stack: 'message\nTHE STACK' });
 
@@ -138,6 +139,23 @@ describe('Documentation', () => {
           base: '__x',
           failure
         }]);
+
+        context('when one of the objects is a function', () => {
+          set('failure', { actual: setInterval, expected: 1})
+
+          it('works fine', () => {
+            withoutStdOut(() => {
+              formatter.fileStart(null, '__x');
+              formatter.exampleEnd(null, examples[0]);
+              formatter.exampleEnd(null, examples[1]);
+              formatter.fileEnd(null, '__x');
+
+              formatter.runEnd(executor);
+            });
+            expect(red).to.have.been.calledWithMatch(/ - \[function setInterval\]/);
+            expect(green).to.have.been.calledWithMatch(/ \+ 1/);
+          });
+        });
 
         context('when executed with require', () => {
           set('settings', () => ({ require: ['required_file.js'] }));

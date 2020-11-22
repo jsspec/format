@@ -242,7 +242,12 @@ const prefix = (prefix, str) => {
 };
 
 function differ(expected, actual) {
-  let blocks = diff.diffJson(expected, actual);
+  let blocks;
+  if(typeof expected === 'function') {
+    if(typeof actual !== 'function') blocks = diff.diffJson(`[function ${expected.name}]`, actual);
+    else return [ansi.red(prefix(' - ', `[function ${expected.name}]`)), ansi.green(prefix(' + ', `[function ${actual.name}]`))];
+  } else if (typeof actual === 'function') blocks = diff.diffJson(expected, `[function ${actual.name}]`)
+  else blocks = diff.diffJson(expected, actual);
 
   return blocks.map(block => {
     if (block.added) {
