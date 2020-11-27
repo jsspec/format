@@ -15,7 +15,7 @@ describe('Json', () => {
 
   set('consoleLog', () => sinon.stub(console, 'log'));
 
-  beforeEach(() => formatter.fileStart('__x'));
+  beforeEach(() => formatter.fileStart(null, '__x'));
 
   describe('status', () => {
     beforeEach(() => {
@@ -86,7 +86,7 @@ describe('Json', () => {
     it('calls to console', () => {
       try {
         expect(consoleLog).not.to.have.been.called;
-        formatter.fileEnd('__x');
+        formatter.fileEnd(null, '__x');
         expect(consoleLog).to.have.been.called;
       } finally {
         consoleLog.restore();

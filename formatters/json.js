@@ -48,11 +48,11 @@ class Json extends Null {
     this.files = new Map();
   }
 
-  fileStart(key) {
+  fileStart(_, key) {
     this.files.set(key, new Record());
   }
 
-  fileEnd(key, name) {
+  fileEnd(_, key, name) {
     const record = this.files.get(key);
     record.close(name);
     if (this.watching) console.log(JSON.stringify(record));

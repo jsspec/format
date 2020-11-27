@@ -50,7 +50,7 @@ describe('Dot', () => {
   );
 
   beforeEach('#fileStart', () => {
-    formatter.fileStart(key);
+    formatter.fileStart(null, key);
     hrtime;
     formatter.exampleStart(null, runnable);
   });

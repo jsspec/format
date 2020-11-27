@@ -93,8 +93,8 @@ class Documentation extends Null {
     this.cwd = process.cwd();
   }
 
-  fileStart(_, name) {
-    this.streams.get(name);
+  fileStart(_, key) {
+    this.streams.get(key);
   }
   exampleStart(_, example) {
     this.streams.get(example.base).start();
@@ -103,8 +103,8 @@ class Documentation extends Null {
   contextEnd(_, context) {
     this.streams.get(context.base).depth--;
   }
-  fileEnd(_, name) {
-    this.streams.close(name);
+  fileEnd(_, key) {
+    this.streams.close(key);
   }
 
   contextStart(_, context) {

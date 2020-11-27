@@ -30,8 +30,8 @@ class Null {
   }
 
   /* eslint-disable no-unused-vars */
-  fileStart(uniqueName, fileName) {}
-  fileEnd(uniqueName, fileName) {}
+  fileStart(executor, uniqueName, fileName) {}
+  fileEnd(executor, uniqueName, fileName) {}
   contextStart(executor, context) {}
   contextEnd(executor, context) {}
   exampleStart(executor, example) {}
